@@ -28,13 +28,24 @@ from models import (
     VideoFeatureCategory,
     VideoFeatureSubCategory,
 )
+# Import new organized shorts features
+from features_repository.shorts.a_shorts_features import get_attract_features
+from features_repository.shorts.b_shorts_features import get_brand_features
+from features_repository.shorts.c_shorts_features import get_connect_features
+from features_repository.shorts.d_shorts_features import get_direct_features
+from features_repository.shorts.shorts_other_features import get_other_features
 
 
 def get_shorts_feature_configs() -> list[VideoFeature]:
   """Gets all the supported ABCD/Shorts features
+  
+  Returns original shorts features PLUS new organized ABCD features
+  (Attract, Brand, Connect, Direct, Other)
+  
   Returns:
-  feature_configs: list of feature configurations
+    feature_configs: list of feature configurations
   """
+  # Get original shorts features
   feature_configs = [
       VideoFeature(
           id="shorts_production_style",
@@ -3382,4 +3393,16 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
       ),
   ]
 
-  return feature_configs
+  # Add new organized ABCD features
+  new_features = (
+      get_attract_features() +
+      get_brand_features() +
+      get_connect_features() +
+      get_direct_features() +
+      get_other_features()
+  )
+  
+  # Combine all features
+  all_features = feature_configs + new_features
+  
+  return all_features
