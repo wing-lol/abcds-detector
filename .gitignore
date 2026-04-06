@@ -48,3 +48,4 @@ Thumbs.db
 .env.local
 test/
 AGENTS.md
+evaluation_services/video_evaluation_service.py

@@ -42,6 +42,15 @@ class VideoEvaluationService:
     feature_groups = feature_configs_handler.features_configs_handler.get_features_by_category_by_group_config(
         features_category
     )
+    
+    # Filter features if features_to_evaluate is specified in config
+    if config.features_to_evaluate and len(config.features_to_evaluate) > 0:
+      for group_key in feature_groups:
+        feature_groups[group_key] = [
+            f for f in feature_groups[group_key] 
+            if f.id in config.features_to_evaluate
+        ]
+    
     uri = video_uri  # use full video uri by default
 
     for group_key in feature_groups:
