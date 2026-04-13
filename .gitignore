@@ -48,4 +48,7 @@ Thumbs.db
 .env.local
 test/
 AGENTS.md
+setup.sh
+
+# add some code to faciliate local testing, but should not be committed
 evaluation_services/video_evaluation_service.py
