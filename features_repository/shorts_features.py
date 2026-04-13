@@ -28,12 +28,6 @@ from models import (
     VideoFeatureCategory,
     VideoFeatureSubCategory,
 )
-# Import new organized shorts features
-from features_repository.shorts.a_shorts_features import get_attract_features
-from features_repository.shorts.b_shorts_features import get_brand_features
-from features_repository.shorts.c_shorts_features import get_connect_features
-from features_repository.shorts.d_shorts_features import get_direct_features
-from features_repository.shorts.shorts_other_features import get_other_features
 
 
 def get_shorts_feature_configs() -> list[VideoFeature]:
@@ -53,14 +47,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
           id="shorts_product_context",
           name="Product Context",
           category=VideoFeatureCategory.SHORTS,
+          sub_category=VideoFeatureSubCategory.NONE,
+          video_segment=VideoSegment.FULL_VIDEO,
           evaluation_criteria="""
                 Product/service is shown being actively used or interacted with by a person
                 in a realistic context that mirrors how potential users would encounter it.
                 Includes: holding, using, consuming, or interacting with the product/service
                 to demonstrate practical value rather than presenting it as a promotional showcase.
                 """,
-          sub_category=VideoFeatureSubCategory.NONE,
-          video_segment=VideoSegment.FULL_VIDEO,
           prompt_template="""
                 Evaluate: Is the product/service actively USED/INTERACTED with in a realistic context?
 
@@ -152,7 +146,64 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
           evaluation_function="",
           include_in_evaluation=True,
           group_by=VideoSegment.FULL_VIDEO,
-      )
+    ),
+    
+    VideoFeature(
+        id="relevant_call_to_action",
+        name="Relevant Call-To-Action",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.NONE,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            A 'Call To Action' phrase is heard or mentioned in the audio or speech at any time in the video.
+        """,
+        prompt_template="""
+            Is any call to action heard or mentioned in the speech of the video?
+        """,
+        extra_instructions=[
+            "Consider the following criteria for your answer: {criteria}",
+            "Some examples of call to actions are: {call_to_actions}",
+            (
+                "Provide the exact timestamp when the call to actions are"
+                " heard or mentioned in the speech of the video."
+            ),
+        ],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+    ),
+    
+    VideoFeature(
+        id="call_to_action_text",
+        name="Call To Action (Text)",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.NONE,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            A 'Call To Action' phrase is detected in the video supers (overlaid text) at any time in the video.
+        """,
+        prompt_template="""
+            Is any call to action detected in any text overlay at any time in the video?
+        """,
+        extra_instructions=[
+            "Consider the following criteria for your answer: {criteria}",
+            "Some examples of call to actions are: {call_to_actions}",
+            (
+                "Look through each frame in the video carefully and answer"
+                " the question."
+            ),
+            (
+                "Provide the exact timestamp when the call to action is"
+                " detected in any text overlay in the video."
+            ),
+        ],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+    )
+    
 
   ]
   
