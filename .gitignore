@@ -49,6 +49,7 @@ Thumbs.db
 test/
 AGENTS.md
 setup.sh
+features_repository/shorts_feature_copy.py
 
 # add some code to faciliate local testing, but should not be committed
 evaluation_services/video_evaluation_service.py
