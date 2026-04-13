@@ -23,9 +23,9 @@ We're excited to announce major enhancements to the ABCDs Detector, significantl
 ### What's New:
 
 1.  **YouTube Shorts Evaluation with Research-Backed Top 20 Features:**
-    *   Introducing **SHORTS evaluation**, specifically tailored for YouTube Shorts. Advanced research has identified the top 20 creative attributes that explain 80% of video performance variation, enabling more efficient creative optimization.
+    *   Introducing SHORTS evaluation, specifically tailored for YouTube Shorts. Advanced research has identified the top 20 creative attributes that explain 80% of video performance variation, enabling more efficient creative optimization.
 
-    **Research Foundation:** Based on extensive analysis of YouTube video performance, the framework has been distilled to focus on the top 20 features by average percentage point impact. By implementing at least eight of these top practices (each representing 40% of attributes), marketers can achieve up to 2.2x increase in creative execution efficiency.
+    *   Research Foundation: Based on extensive analysis of YouTube video performance, the framework has been distilled to focus on the top 20 features by average percentage point impact. By implementing at least eight of these top practices (each representing 40% of attributes), marketers can achieve up to 2.2x increase in creative execution efficiency.
 
     ![Figure 4: Top 20 Features by average percentage point impact on YouTube Video Performance](./features_repository/shorts_feature.png)
 
