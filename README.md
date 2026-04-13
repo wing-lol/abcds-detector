@@ -22,33 +22,34 @@ We're excited to announce major enhancements to the ABCDs Detector, significantl
 
 ### What's New:
 
-1.  **YouTube Shorts Evaluation:**
-    *   Introducing **SHORTS evaluation**, specifically tailored for YouTube Shorts. This includes support for a dedicated set of features designed to evaluate the unique characteristics of short-form video content.
+1.  **YouTube Shorts Evaluation with Research-Backed Top 20 Features:**
+    *   Introducing **SHORTS evaluation**, specifically tailored for YouTube Shorts. Advanced research has identified the top 20 creative attributes that explain 80% of video performance variation, enabling more efficient creative optimization.
 
-    **New YouTube Shorts Evaluation Features** (The availability and functionality of these features may be updated based on ongoing Google research.)
-    *   **Shorts Production Style**
-    *   **Shorts TV Ad Style**
-    *   **Native Content Style (Low Adaptation)**
-    *   **SFV Adaptation Balance (Medium Adaptation)**
-    *   **Short Form Video Adaptation (High Adaptation)**
-    *   **Emoji Usage**
-    *   **Micro-Trend Usage**
-    *   **Meso-Trend Usage**
-    *   **Macro-Trend Implementation**
-    *   **Traditional Ad Style**
-    *   **Partial Social Style (25-50%)**
-    *   **Predominantly Social Style (75%+)**
-    *   **Creative Transitions**
-    *   **Creative Gap Utilization**
-    *   **Product/Service Result**
-    *   **Creator Name Mention**
-    *   **Partnership Clearly Disclosed**
-    *   **Personal Character Talk**
-    *   **Native Brand Context**
-    *   **Personal Character Type**
-    *   **Product Context**
-    *   **Video Format**
-    *   **Ad Style Analysis (Creator vs. Traditional)**
+    **Research Foundation:** Based on extensive analysis of YouTube video performance, the framework has been distilled to focus on the top 20 features by average percentage point impact. By implementing at least eight of these top practices (each representing 40% of attributes), marketers can achieve up to 2.2x increase in creative execution efficiency.
+
+    ![Figure 4: Top 20 Features by average percentage point impact on YouTube Video Performance](./features_repository/shorts_feature.png)
+
+    **Top 20 YouTube Shorts Evaluation Features (by effectiveness):**
+    1. **Product Context (2.65)** - Shows product in realistic use
+    2. **Relevant Call-to-Action (2.58)** - Clear CTA in audio/speech
+    3. **Call to Action (Text) (2.55)** - CTA displayed as on-screen text
+    4. **Sound Effects (2.27)** - Strategic audio enhancements
+    5. **Heartbeat Story Arc (2.25)** - Compelling moments that capture attention early
+    6. **Delight (2.20)** - Creates surprising moments of joy/humor
+    7. **Large Supers (1.92)** - Text overlays matching/supporting audio
+    8. **Emotions (1.67)** - Evokes emotional connection
+    9. **Path to Purchase (1.53)** - Shows how/where to buy
+    10. **Purchase Incentive (1.44)** - Limited time/quantity offers
+    11. **Character-Driven (1.31)** - Relatable character journey
+    12. **Special Offer (Speech) (1.11)** - Discount announced in audio
+    13. **Supers (Audio See & Say) (1.10)** - Synchronized text/audio captions
+    14. **Supers (Audio Augmenting) (0.89)** - Text adds information not in audio
+    15. **Focused Messaging (0.84)** - Single clear core message
+    16. **Jingle (0.77)** - Memorable brand sonic signature
+    17. **Special Offer (Text) (0.75)** - Discount displayed as text
+    18. **Direct to Camera (0.74)** - Direct eye contact with viewer
+    19. **High Contrast Visuals (0.71)** - Strong visual contrast
+    20. **Product Mention (Speech) (0.68)** - Product/brand name verbal mention
 
 2.  **Direct YouTube URL Support:**
     *   You can now directly provide **YouTube URLs** for evaluation. This is applicable for public YouTube videos or videos from channels where the user is the owner.
