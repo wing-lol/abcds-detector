@@ -67,6 +67,7 @@ def run_evaluation():
     # Set video to evaluate
     config.set_videos([
         "gs://solomon_abcd_ds/videos/p8cvwBx4FFk.mp4"
+        # "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4"
     ])
     
     # Run evaluation
