@@ -219,7 +219,7 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
                 ### 1. METRIC DEFINITIONS:
                 - **Density Score:** (Total duration of direct eye contact / address) / (Total video duration). 
-                Represented as density_score in the JSON.
+                Represented as feature_quality_score in the JSON.
                 - **Eye Contact Intensity:** A measure of how consistently the subject maintains 
                 gaze without looking away at scripts or monitors (0.0 - 1.0).
 
@@ -233,8 +233,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 {{
                     "detected": boolean, 
                     "confidence_score": float, # Certainty that gaze is directed at the lens
+                    "feature_quality_score": float, # Total direct address duration / Total duration
                     "metrics": {{
-                        "density_score": float, # MANDATORY: Total direct address duration / Total duration
                         "eye_contact_intensity": float, # 0.0 to 1.0 (steadiness of gaze)
                         "subject_distance": "Close-Up" | "Medium" | "Full-Body",
                         "address_style": "Personal/Intimate" | "Presentational" | "Accidental"
@@ -262,7 +262,7 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
                 ### EVALUATION STEPS:
                 1. Identify all segments where the subject's pupils are directed at the camera lens.
-                2. Calculate the **density_score** by dividing direct address time by total duration.
+                2. Calculate the **feature_quality_score** by dividing direct address time by total duration.
                 3. Assess **eye_contact_intensity**—lower this if the subject is clearly reading a teleprompter or looking at themselves on the phone screen rather than the lens.
                 4. Check the "Hook" (0:00-0:02); direct address at the start is a major retention driver.
             """,
@@ -285,6 +285,7 @@ VideoFeature(
         to determine how effectively the visual text reinforces the spoken message.
     """,
     prompt_template="""
+        Act as a professional Cinematographer and Video Analyst. Your goal is to 
         Analyze the video for SUPERS (text overlays) and their relationship to the audio.
 
         BRAND/PRODUCT CONTEXT:
@@ -294,7 +295,7 @@ VideoFeature(
 
         ### 1. METRIC DEFINITIONS:
         - **Density Score:** (Total duration where text overlays are visible) / (Total video duration).
-          Represented as density_score in the JSON.
+          Represented as feature_quality_score in the JSON.
         - **Synchronicity Score:** (0.0 - 1.0) measure of how well text timing matches spoken words. 
           1.0 = frame-perfect captions; 0.5 = static text roughly related; 0.0 = no relation.
 
@@ -308,9 +309,8 @@ VideoFeature(
         {{
             "detected": boolean,
             "confidence_score": float, # Certainty of text detection
-            "feature_quality_score": float, # 0.0-1.0 based on readability and sync
+            "feature_quality_score": float, # 0.0-1.0 Time text is visible / Total duration
             "metrics": {{
-                "density_score": float, # MANDATORY: Time text is visible / Total duration
                 "synchronicity_score": float, # Match between audio and text timing
                 "text_coverage_ratio": float, # Percentage of frame area occupied by text
                 "primary_supers_type": "Dynamic_Captions" | "Static_Callouts" | "Headlines" | "Mixed"
@@ -339,7 +339,7 @@ VideoFeature(
         ### EVALUATION STEPS:
         1. Identify all segments where text is overlaid on the video.
         2. Compare the text content against the audio track for verbatim or supportive matching.
-        3. Calculate the **density_score** based on text visibility duration.
+        3. Calculate the **feature_quality_score** based on text visibility duration.
         4. Assess the **synchronicity_score**—lower this if text lingers too long or appears after the audio has passed.
         5. Verify if text is in the "Mobile Safe Zone" (central area, not blocked by platform UI).
     """,
@@ -348,97 +348,543 @@ VideoFeature(
     evaluation_function="",
     include_in_evaluation=True,
     group_by=VideoSegment.FULL_VIDEO,
-)
-      
-    # VideoFeature(
-    #     id="shorts_product_context",
-    #     name="Product Context",
-    #     category=VideoFeatureCategory.SHORTS,
-    #     sub_category=VideoFeatureSubCategory.NONE,
-    #     video_segment=VideoSegment.FULL_VIDEO,
-    #     evaluation_criteria="""
-    #         Evaluates the "Show, Don't Tell" quality of the ad. The product/service must be 
-    #         actively used or interacted with by a person in a realistic, relatable context 
-    #         that demonstrates its practical utility or value proposition naturally.
-    #         """,
-    #     prompt_template="""
-    #         Analyze the video to determine if the product/service is used realistically 
-    #         to solve a problem or enhance a moment.
+),
 
-    #         BRAND/PRODUCT CONTEXT:
-    #         Brand: {brand} | Product: {product} | Industry: {vertical}
+    VideoFeature(
+        id="shorts_product_closeup",
+        name="Product Close-Up",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.BRAND,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Quantifies segments where the product occupies at least 30% of the frame. 
+            This measures standard product visibility and presence within a recognizable 
+            context or environment.
+        """,
+        prompt_template="""
+            Act as a professional Cinematographer and Video Analyst. Your goal is to 
+            measure 'Product Presence' via Close-Up detection.
 
-    #         VIDEO METADATA:
-    #         {metadata_summary}
+            BRAND/PRODUCT CONTEXT:
+            Brand: {brand} | Product: {product} | Industry: {vertical}
+            
+            VIDEO METADATA: {metadata_summary}
 
-    #         SCORE ON THREE DIMENSIONS (0-100 each):
+            ### 1. METRIC DEFINITIONS:
+            - **Product Close-Up (CU):** Product occupies 30% to 59% of the frame area.
+            - **Density Score:** (Total duration of Product CU shots) / (Total video duration).
+            Represented as feature_quality_score in the JSON.
 
-    #         1. INTERACTION DEPTH (40%)
-    #         - Focus: Physical contact and active engagement.
-    #         - Criteria: Is the product being handled, worn, consumed, or operated?
-    #         - 90-100: Detailed, multi-step interaction or sustained use (>4s).
-    #         - 70-89: Clear physical interaction but brief (2-4s).
-    #         - 0-69: Minimal touching or product is merely a prop in the frame.
+            ### 2. DYNAMIC SCORING (0.0 - 1.0):
+            - 0.9-1.0: Product CU is the primary visual anchor (Density > 60%).
+            - 0.6-0.8: Product is featured in CU at key intervals (Density 30-60%).
+            - 0.1-0.5: Product CU is incidental or brief (Density < 30%).
 
-    #         2. CONTEXTUAL REALISM (30%)
-    #         - Focus: The "Where" and "Who". 
-    #         - Criteria: Is the environment a "lived-in" space (home, gym, office) vs. a sterile studio? 
-    #         - 90-100: Authentic daily-life setting with natural lighting and relatable user behavior.
-    #         - 70-89: Recognizable setting but feels slightly "staged" or over-polished.
-    #         - 0-69: Infomercial style, white backgrounds, or disconnected from reality.
+            ### FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float, 
+                "feature_quality_score": float, # Based on the Dynamic Scoring scale
+                "metrics": {{
+                    "density_score": float, # MANDATORY: CU duration / Total duration
+                    "average_sfr_percentage": float, # Average Subject-to-Frame ratio for CU shots
+                    "product_identifiability": float, # Clarity of branding (0.0 - 1.0)
+                    "framing_style": "Handheld" | "Studio-Static" | "Pan/Tilt"
+                }},
+                "spatial_analysis": {{
+                    "rule_of_thirds_align": boolean,
+                    "background_distraction_level": "Low" | "Medium" | "High",
+                    "is_product_centered": boolean
+                }},
+                "temporal_segments": [
+                    {{
+                        "start": float,
+                        "end": float,
+                        "sfr_percentage": float,
+                        "description": str 
+                    }}
+                ],
+                "overall_assessment": {{
+                    "visual_impact_score": float,
+                    "is_hook_product_featured": boolean, # Product CU in first 2 seconds?
+                    "summary": "Technical summary of product CU strategy"
+                }}
+            }}
 
-    #         3. UTILITY DEMONSTRATION (30%)
-    #         - Focus: The "Why".
-    #         - Criteria: Does the interaction show the product's purpose/benefit without needing a voiceover?
-    #         - 90-100: The usage clearly solves a pain point or achieves a goal (e.g., thirst quenched, app task finished).
-    #         - 70-89: Product is used correctly but the "benefit" is implied rather than obvious.
-    #         - 0-69: Random interaction that doesn't showcase what the product actually does.
+            ### EVALUATION LOGIC:
+            - Only count segments where the Product is the main subject and fills 30%-59% of the frame.
+            - If the product fills >60%, it exceeds this feature and belongs in the 'Extreme' category.
+        """,
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+    ),
+    
+    VideoFeature(
+        id="shorts_product_extreme_closeup",
+        name="Product Extreme Close-Up",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.BRAND,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Quantifies segments where the product is the dominant visual element, 
+            occupying 60% or more of the frame. This measures 'Macro' focus and 
+            high-detail product showcasing.
+        """,
+        prompt_template="""
+            Act as a professional Cinematographer and Video Analyst. Your goal is to 
+            measure 'Product Dominance' via Extreme Close-Up (ECU) detection.
 
-    #         FINAL CALCULATION:
-    #         Overall Score = (Interaction * 0.4) + (Realism * 0.3) + (Utility * 0.3)
+            BRAND/PRODUCT CONTEXT:
+            Brand: {brand} | Product: {product} | Industry: {vertical}
+            
+            VIDEO METADATA: {metadata_summary}
 
-    #         FORMAT RESPONSE AS JSON:
-    #         {{
-    #             "detected": boolean,
-    #             "confidence_score": float,
-    #             "evaluation": {{
-    #                 "interaction_depth": {{
-    #                     "score": int,
-    #                     "action_type": "physical|consumption|digital|service",
-    #                     "duration": float,
-    #                     "evidence": str
-    #                 }},
-    #                 "contextual_realism": {{
-    #                     "score": int,
-    #                     "environment": str,
-    #                     "authenticity_level": "natural|staged|studio",
-    #                     "observation": str
-    #                 }},
-    #                 "utility_demo": {{
-    #                     "score": int,
-    #                     "benefit_shown": str,
-    #                     "clarity": "explicit|implicit|none"
-    #                 }},
-    #                 "final_scoring": {{
-    #                     "interaction_weighted": float,
-    #                     "realism_weighted": float,
-    #                     "utility_weighted": float,
-    #                     "total_score": float # Sum of the three weighted scores above
-    #                 }}
-    #             }}
-    #         }}
+            ### 1. METRIC DEFINITIONS:
+            - **Product Extreme Close-Up (ECU):** Product occupies 60% or more of the frame area.
+            - **Density Score:** (Total duration of Product ECU shots) / (Total video duration).
+            Represented as feature_quality_score in the JSON.
 
-    #         SCORING GUIDANCE:
-    #         - HIGH (80+): A "Day-in-the-life" feel. User solves a problem using the product in a real room.
-    #         - MED (50-79): Product is used, but it feels like a "commercial." Correct use, but overly scripted.
-    #         - LOW (<50): Product is just sitting there, or being held like a trophy for the camera.
-    #         """,
-    #     extra_instructions=[],
-    #     evaluation_method=EvaluationMethod.LLMS,
-    #     evaluation_function="",
-    #     include_in_evaluation=True,
-    #     group_by=VideoSegment.FULL_VIDEO
-    # ),
+            ### 2. DYNAMIC SCORING (0.0 - 1.0):
+            - 0.9-1.0: Macro-heavy edit; high detail focus (Density > 40%).
+            - 0.6-0.8: Strategic use of macro shots for texture/detail (Density 15-40%).
+            - 0.1-0.5: Incidental or very brief macro moments (Density < 15%).
+
+            ### FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float,
+                "feature_quality_score": float, 
+                "metrics": {{
+                    "density_score": float, # MANDATORY: ECU duration / Total duration
+                    "peak_sfr_percentage": float, # Max frame fill observed
+                    "texture_visibility": "Low" | "Medium" | "High", # Does it show material detail?
+                    "lighting_quality": "Flat" | "Cinematic" | "Overexposed"
+                }},
+                "spatial_analysis": {{
+                    "edge_collision": boolean, # Does the product extend beyond frame edges?
+                    "depth_of_field": "Shallow" | "Deep", # Is the background blurred?
+                    "focal_point": str # e.g., "Logo", "Texture", "Nozzle", "Screen"
+                }},
+                "temporal_segments": [
+                    {{
+                        "start": float,
+                        "end": float,
+                        "sfr_percentage": float,
+                        "focus_point": str,
+                        "description": str 
+                    }}
+                ],
+                "overall_assessment": {{
+                    "visual_impact_score": float,
+                    "is_macro_hook": boolean, # Does the video open with a macro shot?
+                    "summary": "Technical summary of product ECU/Macro strategy"
+                }}
+            }}
+
+            ### EVALUATION LOGIC:
+            - Only count segments where the Product fills 60% or more of the frame.
+            - Focus on detail: ECU shots are intended to show the "hero" aspects of the product.
+        """,
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+),
+    
+    VideoFeature(
+        id="shorts_product_context_index",
+        name="Product Context & Usage Quality",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.CONNECT,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Evaluates the 'Show, Don't Tell' quality. Quantifies physical 
+            interaction, environmental realism, and utility demonstration. 
+            Measures both the duration of usage (Density) and the effectiveness 
+            of the demonstration (Quality Score).   
+            """,
+        prompt_template="""
+            Act as a professional Cinematographer and Video Analyst. 
+            Analyze the 'Product-in-Use' effectiveness.
+
+            BRAND/PRODUCT CONTEXT:
+            Brand: {brand} | Product: {product} | Industry: {vertical}
+
+            VIDEO METADATA:
+            {metadata_summary}
+
+            SCORE ON THREE DIMENSIONS (0-100 each):
+
+            1. INTERACTION DEPTH (40%)
+            - Focus: Physical contact and active engagement.
+            - Criteria: Is the product being handled, worn, consumed, or operated?
+            - 90-100: Detailed, multi-step interaction or sustained use (>4s).
+            - 70-89: Clear physical interaction but brief (2-4s).
+            - 0-69: Minimal touching or product is merely a prop in the frame.
+
+            2. CONTEXTUAL REALISM (30%)
+            - Focus: The "Where" and "Who". 
+            - Criteria: Is the environment a "lived-in" space (home, gym, office) vs. a sterile studio? 
+            - 90-100: Authentic daily-life setting with natural lighting and relatable user behavior.
+            - 70-89: Recognizable setting but feels slightly "staged" or over-polished.
+            - 0-69: Infomercial style, white backgrounds, or disconnected from reality.
+
+            3. UTILITY DEMONSTRATION (30%)
+            - Focus: The "Why".
+            - Criteria: Does the interaction show the product's purpose/benefit without needing a voiceover?
+            - 90-100: The usage clearly solves a pain point or achieves a goal (e.g., thirst quenched, app task finished).
+            - 70-89: Product is used correctly but the "benefit" is implied rather than obvious.
+            - 0-69: Random interaction that doesn't showcase what the product actually does.
+
+            FINAL CALCULATION:
+            Overall Score = (Interaction * 0.4) + (Realism * 0.3) + (Utility * 0.3)
+
+            FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float,
+                "evaluation": {{
+                    "interaction_depth": {{
+                        "score": int,
+                        "action_type": "physical|consumption|digital|service",
+                        "duration": float,
+                        "evidence": str
+                    }},
+                    "contextual_realism": {{
+                        "score": int,
+                        "environment": str,
+                        "authenticity_level": "natural|staged|studio",
+                        "observation": str
+                    }},
+                    "utility_demo": {{
+                        "score": int,
+                        "benefit_shown": str,
+                        "clarity": "explicit|implicit|none"
+                    }},
+                    "final_scoring": {{
+                        "interaction_weighted": float,
+                        "realism_weighted": float,
+                        "utility_weighted": float,
+                        "total_score": float # Sum of the three weighted scores above
+                    }}
+                }}
+            }}
+
+            SCORING GUIDANCE:
+            - HIGH (80+): A "Day-in-the-life" feel. User solves a problem using the product in a real room.
+            - MED (50-79): Product is used, but it feels like a "commercial." Correct use, but overly scripted.
+            - LOW (<50): Product is just sitting there, or being held like a trophy for the camera.
+            """,
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO
+    ),
+    
+    VideoFeature(
+        id="shorts_casual_language",
+        name="Casual Language",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.CONNECT,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Quantifies the informality of the script. Measures the use of everyday language, 
+            slang, contractions, and conversational filler vs. formal/corporate scripted speech.
+        """,
+        prompt_template="""
+            Act as a Linguistic and  Video Analyst. Your goal is to measure 'Tone Informality.'
+
+            ### 1. METRIC DEFINITIONS:
+            - **Density Score:** (Duration of conversational/casual speech) / (Total speech duration).
+            - **Informality Rating:** (0.0 - 1.0) 1.0 = "POV/FaceTime" style; 0.5 = Standard commercial; 0.0 = Corporate/Medical.
+
+            ### FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float,
+                "feature_quality_score": float,
+                "metrics": {{
+                    "density_score": float,
+                    "slang_presence": boolean,
+                    "filler_word_frequency": "Low" | "Medium" | "High", # e.g., "um", "like", "literally"
+                    "script_type": "Ad-lib/Spontaneous" | "Conversational-Scripted" | "Formal"
+                }},
+                "overall_assessment": {{
+                    "authenticity_score": float, # How 'real' does the speech feel?
+                    "summary": "Analysis of linguistic tone"
+                }}
+            }}
+            """,
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO
+),
+    
+    VideoFeature(
+    id="shorts_humor_index",
+    name="Humor & Comedic Timing",
+    category=VideoFeatureCategory.SHORTS,
+    sub_category=VideoFeatureSubCategory.CONNECT,
+    video_segment=VideoSegment.FULL_VIDEO,
+    evaluation_criteria="""
+        Detects and quantifies attempts at humor, including wit, physical comedy, 
+        satire, or comedic timing.
+    """,
+    prompt_template="""
+        Act as a Creative Strategist. Analyze the video for 'Comedic Intent.'
+
+        ### 1. METRIC DEFINITIONS:
+        - **Density Score:** (Duration of comedic setups/payoffs) / (Total video duration).
+        - **Humor Type:** "Observational", "Slapstick", "Deadpan", "Satirical".
+
+        ### FORMAT RESPONSE AS JSON:
+        {{
+            "detected": boolean,
+            "confidence_score": float,
+            "feature_quality_score": float,
+            "metrics": {{
+                "density_score": float,
+                "humor_mechanism": str, # e.g., "Visual gag", "Funny VO", "Reaction"
+                "edge_factor": float # 0.0 (Safe) to 1.0 (Risky/Bold)
+            }},
+            "overall_assessment": {{
+                "entertainment_value": float,
+                "is_hook_funny": boolean,
+                "summary": "Technical summary of humor strategy"
+            }}
+        }}
+    """,
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO
+),
+
+
+    VideoFeature(
+        id="character_driven",
+        name="Character-Driven",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.CONNECT,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Video features a relatable character whose journey or transformation resonates with audience.
+            Evaluates character prominence, relatability, and narrative journey shown.
+            """,
+        prompt_template="""
+            Act as a Narrative Strategist and Video Analyst. Your goal is to measure 
+            'Character Dominance' and 'Persona-Led Storytelling.'
+
+            BRAND/PRODUCT CONTEXT:
+            Brand: {brand} | Product: {product} | Industry: {vertical}
+
+            VIDEO METADATA:
+            {metadata_summary}
+
+            SCORE ON THREE DIMENSIONS (0-100 each):
+
+            1. CHARACTER PROMINENCE (40% weight)
+               Character is clear protagonist with distinct personality/role
+               Look for: Clear lead character, distinct personality traits, on-screen presence
+               - 90-100: Strong, well-developed protagonist
+               - 70-89: Clear character with distinct personality
+               - 50-69: Character present but underdeveloped
+               - 0-49: No clear character focus
+
+            2. CHARACTER JOURNEY/TRANSFORMATION (30% weight)
+               Character shows visible journey, change, or problem-solving
+               Look for: Before/after transformation, challenge faced, goal achieved, emotional arc
+               - 90-100: Clear narrative journey with visible transformation
+               - 70-89: Character shows clear journey or growth
+               - 50-69: Some journey element but subtle
+               - 0-49: No journey or transformation shown
+
+            3. AUDIENCE RELATABILITY (30% weight)
+               Character is relatable to target audience (emotional, realistic, authentic)
+               Look for: Authentic emotion, realistic situation, audience alignment, genuine engagement
+               - 90-100: Highly relatable, authentic emotion
+               - 70-89: Mostly relatable character
+               - 50-69: Somewhat relatable
+               - 0-49: Not relatable or inauthentic
+
+            FINAL CALCULATION:
+            Overall Score = (Prominence × 0.40) + (Journey × 0.30) + (Relatability × 0.30)
+
+            FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float,
+                "evaluation": {{
+                    "character_present": boolean,
+                    "character_type": str,
+                    "personality_traits": [str],
+                    "journey_type": str,
+                    "prominence_score": int,
+                    "journey_score": int,
+                    "relatability_score": int,
+                    "weighted_overall": float
+                }}
+            }}""",
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+    ),
+
+VideoFeature(
+    id="shorts_audio_cta",
+    name="Call to Action (Audio)",
+    category=VideoFeatureCategory.SHORTS,
+    sub_category=VideoFeatureSubCategory.DIRECT,
+    video_segment=VideoSegment.FULL_VIDEO,
+    evaluation_criteria="""
+        Detects and quantifies spoken instructions that direct the viewer to take 
+        action. This includes verbal commands from Voice-Overs (VO) or on-screen talent. 
+        Measures 'CTA Density' and 'Urgency Level' to determine the strength of the 
+        conversion signal.
+    """,
+    prompt_template="""
+        Act as a Direct Response Marketing Analyst. Your goal is to identify and 
+        quantify the spoken Call to Action (CTA).
+
+        BRAND/PRODUCT CONTEXT:
+        Brand: {brand} | Product: {product} | Industry: {vertical}
+        
+        VIDEO METADATA: {metadata_summary}
+
+        ### 1. METRIC DEFINITIONS:
+        - **Density Score:** (Total duration of the spoken CTA) / (Total video duration).
+          Represented as density_score in the JSON.
+        - **CTA Urgency:** (0.0 - 1.0) 1.0 = Explicit command with time-sensitivity (e.g., "Buy now!"); 
+          0.5 = General suggestion (e.g., "Check us out"); 0.1 = Brand mention only.
+
+        ### 2. CTA DELIVERY MODES:
+        - **Direct Address:** On-screen talent looks at camera and gives the CTA.
+        - **Voice-Over (VO):** Narrator delivers the CTA over b-roll or product shots.
+        - **Off-Camera:** Secondary character or background voice mentions the action.
+
+        ### FORMAT RESPONSE AS JSON:
+        {{
+            "detected": boolean,
+            "confidence_score": float, # Certainty that a verbal CTA was issued
+            "feature_quality_score": float, # 0.0-1.0 based on clarity and persuasiveness
+            "metrics": {{
+                "density_score": float, # MANDATORY: CTA duration / Total video duration
+                "cta_urgency_score": float, # 0.0 to 1.0
+                "delivery_method": "On-Screen_Talent" | "Voice-Over" | "Mixed",
+                "cta_type": "Hard_Sell" | "Soft_Suggestion" | "Inspirational"
+            }},
+            "linguistic_analysis": {{
+                "verbatim_text": str, # The exact words used for the CTA
+                "placement_type": "End-Roll" | "Mid-Roll" | "Early-Hook",
+                "contains_incentive": boolean # e.g., "Use code SAVE10", "Free shipping"
+            }},
+            "temporal_segments": [
+                {{
+                    "start": float,
+                    "end": float,
+                    "cta_content": str,
+                    "loudness_relative_to_avg": "Quieter" | "Normal" | "Emphasized"
+                }}
+            ],
+            "overall_assessment": {{
+                "conversion_potential": float, # How likely is this audio to drive a click?
+                "is_cta_at_end": boolean, # Does the audio end on a CTA?
+                "summary": "Technical analysis of verbal CTA effectiveness"
+            }}
+        }}
+
+        ### EVALUATION LOGIC:
+        1. Scan the audio track for imperative verbs (Shop, Buy, Click, Visit, Try, Download).
+        2. Calculate the **density_score** by summing the duration of these verbal triggers.
+        3. Assess **feature_quality_score** based on vocal clarity and "The Ask"—if the CTA is muffled or buried under loud music, lower the score.
+        4. Note the placement: A CTA at the very end is standard; a CTA in the first 5 seconds is a "Fast-Action" strategy.
+    """,
+    extra_instructions=[],
+    evaluation_method=EvaluationMethod.LLMS,
+    evaluation_function="",
+    include_in_evaluation=True,
+    group_by=VideoSegment.FULL_VIDEO,
+),
+
+    VideoFeature(
+        id="special_offer_speech",
+        name="Special Offer (Speech)",
+        category=VideoFeatureCategory.SHORTS,
+        sub_category=VideoFeatureSubCategory.DIRECT,
+        video_segment=VideoSegment.FULL_VIDEO,
+        evaluation_criteria="""
+            Audio/voiceover explicitly announces special offer, discount, or deal.
+            Evaluates clarity of offer type, specific details mentioned, and delivery emphasis.
+            """,
+        prompt_template="""
+            Act as a Direct Response Marketing Analyst. Your goal is to evaluate: Is there a SPECIAL OFFER announced in speech?
+
+            BRAND/PRODUCT CONTEXT:
+            Brand: {brand} | Product: {product} | Industry: {vertical}
+
+            VIDEO METADATA:
+            {metadata_summary}
+
+            SCORE ON THREE DIMENSIONS (0-100 each):
+
+            1. OFFER TYPE CLARITY (40% weight)
+               Clear announcement of what offer is (discount %, deal, promotion type)
+               Look for: "20% off", "Free with purchase", "Buy one get one", "Limited time deal"
+               - 90-100: Very clear offer type with specific details (e.g., "20% off")
+               - 70-89: Clear offer mentioned with reasonable detail
+               - 50-69: Offer mentioned but details vague or implied
+               - 0-49: No offer details in audio
+
+            2. DELIVERY EMPHASIS (35% weight)
+               Strong emphasis given through voice tone, repetition, or prominence
+               Look for: Emphatic tone, repeated mention, early in spot, vocal excitement
+               - 90-100: Strong emphasis with enthusiastic delivery
+               - 70-89: Clear emphasis given in delivery
+               - 50-69: Mentioned with moderate emphasis
+               - 0-49: Buried or casual mention
+
+            3. OFFER PROMINENCE (25% weight)
+               Offer featured continuously or at strategic moments in video
+               Look for: Multiple mentions, mentioned early, highlighted throughout
+               - 90-100: Prominent throughout, multiple emphatic mentions
+               - 70-89: Clear prominence in video
+               - 50-69: Mentioned but not prominent
+               - 0-49: Single casual mention
+
+            FINAL CALCULATION:
+            Overall Score = (OfferClarity × 0.40) + (Emphasis × 0.35) + (Prominence × 0.25)
+
+            FORMAT RESPONSE AS JSON:
+            {{
+                "detected": boolean,
+                "confidence_score": float,
+                "evaluation": {{
+                    "offer_type": str,
+                    "offer_details": str,
+                    "delivery_tone": str,
+                    "mention_count": int,
+                    "offer_clarity_score": int,
+                    "emphasis_score": int,
+                    "prominence_score": int,
+                    "weighted_overall": float
+                }}
+            }}""",
+        extra_instructions=[],
+        evaluation_method=EvaluationMethod.LLMS,
+        evaluation_function="",
+        include_in_evaluation=True,
+        group_by=VideoSegment.FULL_VIDEO,
+    )
     
     # VideoFeature(
     #     id="relevant_call_to_action",
@@ -920,145 +1366,9 @@ VideoFeature(
 #         group_by=VideoSegment.FULL_VIDEO,
 #     ),
 
-#     VideoFeature(
-#         id="character_driven",
-#         name="Character-Driven",
-#         category=VideoFeatureCategory.SHORTS,
-#         sub_category=VideoFeatureSubCategory.NONE,
-#         video_segment=VideoSegment.FULL_VIDEO,
-#         evaluation_criteria="""
-#             Video features a relatable character whose journey or transformation resonates with audience.
-#             Evaluates character prominence, relatability, and narrative journey shown.
-#             """,
-#         prompt_template="""
-#             Evaluate: Is the video CHARACTER-DRIVEN and relatable?
 
-#             BRAND/PRODUCT CONTEXT:
-#             Brand: {brand} | Product: {product} | Industry: {vertical}
 
-#             VIDEO METADATA:
-#             {metadata_summary}
 
-#             SCORE ON THREE DIMENSIONS (0-100 each):
-
-#             1. CHARACTER PROMINENCE (40% weight)
-#                Character is clear protagonist with distinct personality/role
-#                Look for: Clear lead character, distinct personality traits, on-screen presence
-#                - 90-100: Strong, well-developed protagonist
-#                - 70-89: Clear character with distinct personality
-#                - 50-69: Character present but underdeveloped
-#                - 0-49: No clear character focus
-
-#             2. CHARACTER JOURNEY/TRANSFORMATION (30% weight)
-#                Character shows visible journey, change, or problem-solving
-#                Look for: Before/after transformation, challenge faced, goal achieved, emotional arc
-#                - 90-100: Clear narrative journey with visible transformation
-#                - 70-89: Character shows clear journey or growth
-#                - 50-69: Some journey element but subtle
-#                - 0-49: No journey or transformation shown
-
-#             3. AUDIENCE RELATABILITY (30% weight)
-#                Character is relatable to target audience (emotional, realistic, authentic)
-#                Look for: Authentic emotion, realistic situation, audience alignment, genuine engagement
-#                - 90-100: Highly relatable, authentic emotion
-#                - 70-89: Mostly relatable character
-#                - 50-69: Somewhat relatable
-#                - 0-49: Not relatable or inauthentic
-
-#             FINAL CALCULATION:
-#             Overall Score = (Prominence × 0.40) + (Journey × 0.30) + (Relatability × 0.30)
-
-#             FORMAT RESPONSE AS JSON:
-#             {{
-#                 "detected": boolean,
-#                 "confidence_score": float,
-#                 "evaluation": {{
-#                     "character_present": boolean,
-#                     "character_type": str,
-#                     "personality_traits": [str],
-#                     "journey_type": str,
-#                     "prominence_score": int,
-#                     "journey_score": int,
-#                     "relatability_score": int,
-#                     "weighted_overall": float
-#                 }}
-#             }}""",
-#         extra_instructions=[],
-#         evaluation_method=EvaluationMethod.LLMS,
-#         evaluation_function="",
-#         include_in_evaluation=True,
-#         group_by=VideoSegment.FULL_VIDEO,
-#     ),
-
-#     VideoFeature(
-#         id="special_offer_speech",
-#         name="Special Offer (Speech)",
-#         category=VideoFeatureCategory.SHORTS,
-#         sub_category=VideoFeatureSubCategory.NONE,
-#         video_segment=VideoSegment.FULL_VIDEO,
-#         evaluation_criteria="""
-#             Audio/voiceover explicitly announces special offer, discount, or deal.
-#             Evaluates clarity of offer type, specific details mentioned, and delivery emphasis.
-#             """,
-#         prompt_template="""
-#             Evaluate: Is there a SPECIAL OFFER announced in speech?
-
-#             BRAND/PRODUCT CONTEXT:
-#             Brand: {brand} | Product: {product} | Industry: {vertical}
-
-#             VIDEO METADATA:
-#             {metadata_summary}
-
-#             SCORE ON THREE DIMENSIONS (0-100 each):
-
-#             1. OFFER TYPE CLARITY (40% weight)
-#                Clear announcement of what offer is (discount %, deal, promotion type)
-#                Look for: "20% off", "Free with purchase", "Buy one get one", "Limited time deal"
-#                - 90-100: Very clear offer type with specific details (e.g., "20% off")
-#                - 70-89: Clear offer mentioned with reasonable detail
-#                - 50-69: Offer mentioned but details vague or implied
-#                - 0-49: No offer details in audio
-
-#             2. DELIVERY EMPHASIS (35% weight)
-#                Strong emphasis given through voice tone, repetition, or prominence
-#                Look for: Emphatic tone, repeated mention, early in spot, vocal excitement
-#                - 90-100: Strong emphasis with enthusiastic delivery
-#                - 70-89: Clear emphasis given in delivery
-#                - 50-69: Mentioned with moderate emphasis
-#                - 0-49: Buried or casual mention
-
-#             3. OFFER PROMINENCE (25% weight)
-#                Offer featured continuously or at strategic moments in video
-#                Look for: Multiple mentions, mentioned early, highlighted throughout
-#                - 90-100: Prominent throughout, multiple emphatic mentions
-#                - 70-89: Clear prominence in video
-#                - 50-69: Mentioned but not prominent
-#                - 0-49: Single casual mention
-
-#             FINAL CALCULATION:
-#             Overall Score = (OfferClarity × 0.40) + (Emphasis × 0.35) + (Prominence × 0.25)
-
-#             FORMAT RESPONSE AS JSON:
-#             {{
-#                 "detected": boolean,
-#                 "confidence_score": float,
-#                 "evaluation": {{
-#                     "offer_type": str,
-#                     "offer_details": str,
-#                     "delivery_tone": str,
-#                     "mention_count": int,
-#                     "offer_clarity_score": int,
-#                     "emphasis_score": int,
-#                     "prominence_score": int,
-#                     "weighted_overall": float
-#                 }}
-#             }}""",
-#         extra_instructions=[],
-#         evaluation_method=EvaluationMethod.LLMS,
-#         evaluation_function="",
-#         include_in_evaluation=True,
-#         group_by=VideoSegment.FULL_VIDEO,
-#     ),
 
 #     VideoFeature(
 #         id="supers_see_and_say",
