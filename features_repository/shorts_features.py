@@ -47,13 +47,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             id="tight_framing_index",
             name="Tight Framing & Visual Dominance",
             category=VideoFeatureCategory.SHORTS,
-            sub_category=VideoFeatureSubCategory.NONE,
+            sub_category=VideoFeatureSubCategory.ATTRACT,
             video_segment=VideoSegment.FULL_VIDEO,
             evaluation_criteria="""
                 Quantifies the spatial dominance of the primary subject.
-                Tight framing is defined by a Subject-to-Frame Ratio (SfR) of ≥65%.
-                The score should reflect the persistence of tight framing throughout
-                the video duration, distinguishing between 'momentary' and 'thematic' tight framing.
+                Tight framing is defined by a Subject-to-Frame Ratio (SfR) of ≥60%.
+                The score reflects the 'Density' (persistence) of tight framing, 
+                differentiating between incidental close-ups and thematic visual dominance.
             """,
             prompt_template="""
                 Act as a professional Cinematographer and Video Analyst. Your goal is to measure
@@ -61,48 +61,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
                 BRAND/PRODUCT CONTEXT:
                 Brand: {brand} | Product: {product} | Industry: {vertical}
-               
+            
                 VIDEO METADATA: {metadata_summary}
 
-
                 ### 1. QUANTITATIVE HEURISTICS:
-                - **Extreme Close-Up (ECU):** Subject fills >80% of frame. (High Impact)
-                - **Close-Up (CU):** Subject fills 60% - 80% of frame. (Standard Tight)
-                - **Medium Shot (MS):** Subject fills 30% - 59% of frame. (Not Tight)
-                - **Wide/Long Shot (LS):** Subject fills <30% of frame. (Loose)
+                - **Extreme Close-Up (ECU):** Subject fills >80% of frame.
+                - **Close-Up (CU):** Subject fills 60% - 80% of frame.
+                - **Medium Shot (MS):** Subject fills 30% - 59% of frame.
+                - **Wide/Long Shot (LS):** Subject fills <30% of frame.
 
-
-                ### 2. TEMPORAL DENSITY CALCULATION:
-                Don't just detect if it exists. Calculate the "Tight Framing Density":
-                
-                (Total seconds of CU or ECU shots) / (Total video duration) = Density Score
-                
-                The Density Score, referred to as density_score in the JSON file.
-
-
-                ### 3. DYNAMIC SCORING (0.0 - 1.0):
-                - **0.9 - 1.0 (Dominant):** Density > 70%. Subject is the constant focal point.
-                - **0.7 - 0.8 (Strong):** Density 40-70%. Clear alternation between context and tight focus.
-                - **0.4 - 0.6 (Balanced):** Density 20-40%. Mixed framing; used for emphasis only.
-                - **0.1 - 0.3 (Incidental):** Single brief shot or macro-cutaway.
-                - **0.0:** Entirely wide or medium shots.
-
+                ### 2. DENSITY & QUALITY LOGIC:
+                - **Density Score:** (Total duration of all CU and ECU shots) / (Total video duration).
+                Represented as density_score in the JSON.
+                - **Feature Quality Score:** Map the density_score to the following scale:
+                    * 0.9-1.0: Density > 70% (Dominant)
+                    * 0.7-0.8: Density 40-70% (Strong)
+                    * 0.4-0.6: Density 20-40% (Balanced)
+                    * 0.1-0.3: Density < 20% (Incidental)
 
                 ### FORMAT RESPONSE AS JSON:
                 {{
                     "detected": boolean,
-                    "confidence_score": float, # Certainty of detected presence (0.0 - 1.0)
-                    "feature_quality_score": float, # Calculated from above
+                    "confidence_score": float, # Certainty of visual detection accuracy
+                    "feature_quality_score": float, # The 0.0-1.0 score based on the Density Scale
                     "metrics": {{
-                        "density_score": float, # Total speech duration / Total video duration
-                        "tight_framing_density": float, # Percentage of total runtime that is tight-framed
-                        "peak_sfr_percentage": float, # The highest Subject-to-Frame ratio observed
+                        "density_score": float, # MANDATORY: Total tight-frame duration / Total duration
+                        "peak_sfr_percentage": float, # Highest Subject-to-Frame ratio observed
                         "primary_subject_class": str, # "Product", "Human_Face", "Text", "Abstract"
-                        "framing_cadence": str # "Static", "Fast-Cutting", "Zoom-In-Progressive"
+                        "framing_cadence": "Static" | "Fast-Cutting" | "Zoom-In-Progressive"
                     }},
                     "spatial_analysis": {{
-                        "average_negative_space_ratio": float, # 1.0 - SfR
-                        "edge_collision": boolean, # Does the subject bleed off the edges? (Indicates very tight framing)
+                        "average_negative_space_ratio": float, # 1.0 - average SfR
+                        "edge_collision": boolean, # Subject bleeds off the edges
                         "occlusion_level": "None" | "Partial" | "Heavy"
                     }},
                     "temporal_segments": [
@@ -110,19 +100,21 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                             "start": float,
                             "end": float,
                             "shot_type": "ECU" | "CU",
-                            "subject_dominance_score": float # 0.0 to 1.0 for this specific segment
+                            "subject_dominance_score": float,
+                            "description": str
                         }}
                     ],
                     "overall_assessment": {{
-                        "visual_impact_score": float, # How effective is the framing for mobile viewing?
+                        "visual_impact_score": float, # Effectiveness for mobile viewing
+                        "is_hook_tightly_framed": boolean, # Evaluates the first 3 seconds
                         "summary": "Concise technical summary of framing strategy"
                     }}
                 }}
 
-
                 ### EVALUATION LOGIC:
-                - Prioritize the "Hook" (first 5 seconds). If the hook is tight-framed, increase the impact score.
-                - Ignore "Negative Space" if it is pure solid color (like a graphic background), focus on the Subject's bounding box.
+                - **The Hook:** If the first 3 seconds are tight-framed, increase the visual_impact_score.
+                - **Negative Space:** Ignore solid color backgrounds (graphics); focus on the subject's physical bounding box.
+                - **Calculation:** Ensure the density_score is a precise float based on the temporal_segments sum.
             """,
             extra_instructions=[],
             evaluation_method=EvaluationMethod.LLMS,
@@ -132,10 +124,10 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
         ),
         
         VideoFeature(
-            id="human_voice_index",
+            id="shorts_human_voice",
             name="Human Voice Presence",
             category=VideoFeatureCategory.SHORTS,
-            sub_category=VideoFeatureSubCategory.NONE,
+            sub_category=VideoFeatureSubCategory.ATTRACT,
             video_segment=VideoSegment.FULL_VIDEO,
             evaluation_criteria="""
             Quantifies the presence, duration, and quality of human speech. 
@@ -144,7 +136,7 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             speech) and assesses the clarity and role of the speaker.
         """,
             prompt_template="""
-            Analyze the audio track of this video specifically for human vocal presence.
+            Act as a professional Cinematographer and Video Analyst. Your goal is to analyze the audio track of this video specifically for human vocal presence.
 
             BRAND/PRODUCT CONTEXT:
             Brand: {brand} | Product: {product} | Industry: {vertical}
@@ -152,7 +144,7 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             VIDEO METADATA: {metadata_summary}
 
             ### 1. METRIC DEFINITIONS:
-            - **Density Score:** (Total duration of audible human speech) / (Total video duration). It isreferred to as density_score in the JSON file.
+            - **Density Score:** (Total duration of audible human speech) / (Total video duration). It is referred to as density_score in the JSON file.
             *Example: If there is a 2s intro greeting and a 3s closing call-to-action in a 10s video, Density Score is 0.5.*
             - **Vocal Clarity:** The ease with which the voice is understood (0.0 - 1.0). High score = studio quality/clear; Low score = muffled, heavy background noise, or distorted.
 
@@ -204,7 +196,159 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             evaluation_function="",
             include_in_evaluation=True,
             group_by=VideoSegment.FULL_VIDEO,
-        )
+        ),
+        
+        VideoFeature(
+            id="shorts_direct_to_camera",
+            name="Direct to Camera",
+            category=VideoFeatureCategory.SHORTS,
+            sub_category=VideoFeatureSubCategory.ATTRACT,
+            video_segment=VideoSegment.FULL_VIDEO,
+            evaluation_criteria="""
+                Quantifies the duration and intensity of direct eye contact between the 
+                on-screen subject and the camera lens. This feature measures the 
+                'Direct Address Density' and assesses the intimacy of the framing 
+                (e.g., face-to-face address).
+            """,
+            prompt_template="""
+                Act as a professional Cinematographer and Video Analyst. Your goal is to 
+                analyze the video for instances where a person looks directly into the camera lens 
+                to address the viewer.
+
+                VIDEO METADATA: {metadata_summary}
+
+                ### 1. METRIC DEFINITIONS:
+                - **Density Score:** (Total duration of direct eye contact / address) / (Total video duration). 
+                Represented as density_score in the JSON.
+                - **Eye Contact Intensity:** A measure of how consistently the subject maintains 
+                gaze without looking away at scripts or monitors (0.0 - 1.0).
+
+                ### 2. ADDRESS MODES:
+                - **Direct Address:** Subject is looking into the lens and speaking.
+                - **Silent Gaze:** Subject maintains eye contact without speaking (e.g., reacting to a sound).
+                - **Glance:** Brief, intermittent eye contact (less than 0.5s).
+                - **Off-Camera:** Subject is looking at a secondary point (3/4 profile), not the viewer.
+
+                ### FORMAT RESPONSE AS JSON:
+                {{
+                    "detected": boolean, 
+                    "confidence_score": float, # Certainty that gaze is directed at the lens
+                    "metrics": {{
+                        "density_score": float, # MANDATORY: Total direct address duration / Total duration
+                        "eye_contact_intensity": float, # 0.0 to 1.0 (steadiness of gaze)
+                        "subject_distance": "Close-Up" | "Medium" | "Full-Body",
+                        "address_style": "Personal/Intimate" | "Presentational" | "Accidental"
+                    }},
+                    "visual_engagement_analysis": {{
+                        "facial_visibility": "Full" | "Partial" | "Occluded",
+                        "eye_level_alignment": "Eye-Level" | "High-Angle" | "Low-Angle",
+                        "emotional_delivery": str # e.g., "High-energy", "Authentic", "Stoic"
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "gaze_type": "Direct_Address" | "Silent_Gaze" | "Intermittent",
+                            "eye_contact_strength": float,
+                            "description": str # e.g., "Speaker addresses viewer during the hook"
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "parasocial_score": float, # How effectively does the subject "connect" with the viewer?
+                        "is_hook_direct": boolean, # Does direct eye contact occur in the first 1.5 seconds?
+                        "summary": "Technical summary of direct address strategy"
+                    }}
+                }}
+
+                ### EVALUATION STEPS:
+                1. Identify all segments where the subject's pupils are directed at the camera lens.
+                2. Calculate the **density_score** by dividing direct address time by total duration.
+                3. Assess **eye_contact_intensity**—lower this if the subject is clearly reading a teleprompter or looking at themselves on the phone screen rather than the lens.
+                4. Check the "Hook" (0:00-0:02); direct address at the start is a major retention driver.
+            """,
+            extra_instructions=[],
+            evaluation_method=EvaluationMethod.LLMS,
+            evaluation_function="",
+            include_in_evaluation=True,
+            group_by=VideoSegment.FULL_VIDEO,
+        ),
+
+VideoFeature(
+    id="shorts_has_supers",
+    name="Supers & Text-Audio Synchronicity",
+    category=VideoFeatureCategory.SHORTS,
+    sub_category=VideoFeatureSubCategory.ATTRACT,
+    video_segment=VideoSegment.FULL_VIDEO,
+    evaluation_criteria="""
+        Quantifies the presence, accuracy, and synchronization of text overlays (supers) 
+        with the spoken audio. This measures 'Text Density' and the 'Synchronicity Score' 
+        to determine how effectively the visual text reinforces the spoken message.
+    """,
+    prompt_template="""
+        Analyze the video for SUPERS (text overlays) and their relationship to the audio.
+
+        BRAND/PRODUCT CONTEXT:
+        Brand: {brand} | Product: {product} | Industry: {vertical}
+        
+        VIDEO METADATA: {metadata_summary}
+
+        ### 1. METRIC DEFINITIONS:
+        - **Density Score:** (Total duration where text overlays are visible) / (Total video duration).
+          Represented as density_score in the JSON.
+        - **Synchronicity Score:** (0.0 - 1.0) measure of how well text timing matches spoken words. 
+          1.0 = frame-perfect captions; 0.5 = static text roughly related; 0.0 = no relation.
+
+        ### 2. SUPERS CATEGORIES:
+        - **Dynamic Captions:** Word-by-word or phrase-by-phrase synced text.
+        - **Static Callouts:** Persistent text (e.g., "50% OFF" or "Product Name").
+        - **Kinetic Typography:** Stylized, moving text used for emphasis.
+        - **Headlines:** Large top/bottom text bars that stay throughout the video.
+
+        ### FORMAT RESPONSE AS JSON:
+        {{
+            "detected": boolean,
+            "confidence_score": float, # Certainty of text detection
+            "feature_quality_score": float, # 0.0-1.0 based on readability and sync
+            "metrics": {{
+                "density_score": float, # MANDATORY: Time text is visible / Total duration
+                "synchronicity_score": float, # Match between audio and text timing
+                "text_coverage_ratio": float, # Percentage of frame area occupied by text
+                "primary_supers_type": "Dynamic_Captions" | "Static_Callouts" | "Headlines" | "Mixed"
+            }},
+            "visual_analysis": {{
+                "readability_score": float, # Contrast and font clarity (0.0 - 1.0)
+                "is_mobile_safe": boolean, # Is text clear of UI elements (likes/captions)?
+                "font_style": "Minimal" | "Bold/Aggressive" | "Stylized/Brand"
+            }},
+            "temporal_segments": [
+                {{
+                    "start": float,
+                    "end": float,
+                    "text_content": str,
+                    "matches_audio": boolean,
+                    "style": "Caption" | "Emphasis" | "CTA"
+                }}
+            ],
+            "overall_assessment": {{
+                "narrative_reinforcement_score": float, # How well text aids understanding
+                "is_hook_text_present": boolean, # Does text appear in the first 1.5 seconds?
+                "summary": "Technical summary of text overlay strategy"
+            }}
+        }}
+
+        ### EVALUATION STEPS:
+        1. Identify all segments where text is overlaid on the video.
+        2. Compare the text content against the audio track for verbatim or supportive matching.
+        3. Calculate the **density_score** based on text visibility duration.
+        4. Assess the **synchronicity_score**—lower this if text lingers too long or appears after the audio has passed.
+        5. Verify if text is in the "Mobile Safe Zone" (central area, not blocked by platform UI).
+    """,
+    extra_instructions=[],
+    evaluation_method=EvaluationMethod.LLMS,
+    evaluation_function="",
+    include_in_evaluation=True,
+    group_by=VideoSegment.FULL_VIDEO,
+)
       
     # VideoFeature(
     #     id="shorts_product_context",
