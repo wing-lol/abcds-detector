@@ -79,32 +79,39 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 ### FORMAT RESPONSE AS JSON:
                 {{
                     "detected": boolean,
-                    "confidence_score": float, # Certainty of visual detection accuracy
-                    "feature_quality_score": float, # The 0.0-1.0 score based on the Density Scale
-                    "metrics": {{
-                        "density_score": float, # MANDATORY: Total tight-frame duration / Total duration
-                        "peak_sfr_percentage": float, # Highest Subject-to-Frame ratio observed
-                        "primary_subject_class": str, # "Product", "Human_Face", "Text", "Abstract"
-                        "framing_cadence": "Static" | "Fast-Cutting" | "Zoom-In-Progressive"
-                    }},
-                    "spatial_analysis": {{
-                        "average_negative_space_ratio": float, # 1.0 - average SfR
-                        "edge_collision": boolean, # Subject bleeds off the edges
-                        "occlusion_level": "None" | "Partial" | "Heavy"
-                    }},
-                    "temporal_segments": [
-                        {{
-                            "start": float,
-                            "end": float,
-                            "shot_type": "ECU" | "CU",
-                            "subject_dominance_score": float,
-                            "description": str
+                    "detected_confidence_score": float,
+                    "detected_evidence": str,
+                    "key_driver_category": str,
+                    "recommended_actions": str,
+                    "strengths_to_keep": str,
+                    "first_appearance_timestamp": float,
+                    "feature_quality_score": float,
+                    "feature_specifics": {{
+                        "metrics": {{
+                            "density_score": float,
+                            "peak_sfr_percentage": float,
+                            "primary_subject_class": str,
+                            "framing_cadence": "Static | Fast-Cutting | Zoom-In-Progressive"
+                        }},
+                        "spatial_analysis": {{
+                            "average_negative_space_ratio": float,
+                            "edge_collision": boolean,
+                            "occlusion_level": "None | Partial | Heavy"
+                        }},
+                        "temporal_segments": [
+                            {{
+                                "start": float,
+                                "end": float,
+                                "shot_type": "ECU | CU",
+                                "subject_dominance_score": float,
+                                "description": str
+                            }}
+                        ],
+                        "overall_assessment": {{
+                            "visual_impact_score": float,
+                            "is_hook_tightly_framed": boolean,
+                            "summary": str
                         }}
-                    ],
-                    "overall_assessment": {{
-                        "visual_impact_score": float, # Effectiveness for mobile viewing
-                        "is_hook_tightly_framed": boolean, # Evaluates the first 3 seconds
-                        "summary": "Concise technical summary of framing strategy"
                     }}
                 }}
 
@@ -149,32 +156,40 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
             ### FORMAT RESPONSE AS JSON:
             {{
-                "detected": boolean, 
-                "confidence_score": float, # Certainty that the detected audio is a human voice
-                "metrics": {{
-                    "density_score": float, # Total speech duration / Total video duration
-                    "vocal_clarity_score": float, # 0.0 to 1.0 based on signal-to-noise ratio
-                    "primary_voice_type": "Voice_Over" | "Dialogue" | "AI_Synthetic" | "Mixed",
-                    "speech_cadence": "Constant" | "Intermittent" | "Rapid" | "Slow"
-                }},
-                "audio_analysis": {{
-                    "background_noise_level": "Low" | "Medium" | "High",
-                    "music_overlap_interference": boolean, # Does background music drown out the voice?
-                    "speaker_gender_estimate": "Male" | "Female" | "Multiple" | "N/A"
-                }},
-                "temporal_segments": [
-                    {{
-                        "start": float,
-                        "end": float,
-                        "voice_role": "Narration" | "Hook" | "CTA" | "Ambient",
-                        "clarity_rating": float,
-                        "description": str # e.g., "Creator introduces product features"
+                "detected": boolean,
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "vocal_clarity_score": float,
+                        "primary_voice_type": "Voice_Over | Dialogue | AI_Synthetic | Mixed",
+                        "speech_cadence": "Constant | Intermittent | Rapid | Slow"
+                    }},
+                    "audio_analysis": {{
+                        "background_noise_level": "Low | Medium | High",
+                        "music_overlap_interference": boolean,
+                        "speaker_gender_estimate": "Male | Female | Multiple | N/A"
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "voice_role": "Narration | Hook | CTA | Ambient",
+                            "clarity_rating": float,
+                            "description": str
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "vocal_impact_score": float,
+                        "is_hook_voiced": boolean,
+                        "summary": str
                     }}
-                ],
-                "overall_assessment": {{
-                    "vocal_impact_score": float, # How much does the voice drive the narrative?
-                    "is_hook_voiced": boolean, # Does speech start within the first 1.5 seconds?
-                    "summary": "Technical summary of audio/vocal strategy"
                 }}
             }}
 
@@ -223,32 +238,39 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
                 ### FORMAT RESPONSE AS JSON:
                 {{
-                    "detected": boolean, 
-                    "confidence_score": float, # Certainty that gaze is directed at the lens
-                    "feature_quality_score": float, # Total direct address duration / Total duration
-                    "metrics": {{
-                        "eye_contact_intensity": float, # 0.0 to 1.0 (steadiness of gaze)
-                        "subject_distance": "Close-Up" | "Medium" | "Full-Body",
-                        "address_style": "Personal/Intimate" | "Presentational" | "Accidental"
-                    }},
-                    "visual_engagement_analysis": {{
-                        "facial_visibility": "Full" | "Partial" | "Occluded",
-                        "eye_level_alignment": "Eye-Level" | "High-Angle" | "Low-Angle",
-                        "emotional_delivery": str # e.g., "High-energy", "Authentic", "Stoic"
-                    }},
-                    "temporal_segments": [
-                        {{
-                            "start": float,
-                            "end": float,
-                            "gaze_type": "Direct_Address" | "Silent_Gaze" | "Intermittent",
-                            "eye_contact_strength": float,
-                            "description": str # e.g., "Speaker addresses viewer during the hook"
+                    "detected": boolean,
+                    "detected_confidence_score": float,
+                    "detected_evidence": str,
+                    "key_driver_category": str,
+                    "recommended_actions": str,
+                    "strengths_to_keep": str,
+                    "first_appearance_timestamp": float,
+                    "feature_quality_score": float,
+                    "feature_specifics": {{
+                        "metrics": {{
+                            "eye_contact_intensity": float,
+                            "subject_distance": "Close-Up | Medium | Full-Body",
+                            "address_style": "Personal/Intimate | Presentational | Accidental"
+                        }},
+                        "visual_engagement_analysis": {{
+                            "facial_visibility": "Full | Partial | Occluded",
+                            "eye_level_alignment": "Eye-Level | High-Angle | Low-Angle",
+                            "emotional_delivery": str
+                        }},
+                        "temporal_segments": [
+                            {{
+                                "start": float,
+                                "end": float,
+                                "gaze_type": "Direct_Address | Silent_Gaze | Intermittent",
+                                "eye_contact_strength": float,
+                                "description": str
+                            }}
+                        ],
+                        "overall_assessment": {{
+                            "parasocial_score": float,
+                            "is_hook_direct": boolean,
+                            "summary": str
                         }}
-                    ],
-                    "overall_assessment": {{
-                        "parasocial_score": float, # How effectively does the subject "connect" with the viewer?
-                        "is_hook_direct": boolean, # Does direct eye contact occur in the first 1.5 seconds?
-                        "summary": "Technical summary of direct address strategy"
                     }}
                 }}
 
@@ -296,31 +318,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
         ### FORMAT RESPONSE AS JSON:
         {{
             "detected": boolean,
-            "confidence_score": float, # Certainty of text detection
-            "feature_quality_score": float, # 0.0-1.0 Time text is visible / Total duration
-            "metrics": {{
-                "synchronicity_score": float, # Match between audio and text timing
-                "text_coverage_ratio": float, # Percentage of frame area occupied by text
-                "primary_supers_type": "Dynamic_Captions" | "Static_Callouts" | "Headlines" | "Mixed"
-            }},
-            "visual_analysis": {{
-                "readability_score": float, # Contrast and font clarity (0.0 - 1.0)
-                "is_mobile_safe": boolean, # Is text clear of UI elements (likes/captions)?
-                "font_style": "Minimal" | "Bold/Aggressive" | "Stylized/Brand"
-            }},
-            "temporal_segments": [
-                {{
-                    "start": float,
-                    "end": float,
-                    "text_content": str,
-                    "matches_audio": boolean,
-                    "style": "Caption" | "Emphasis" | "CTA"
+            "detected_confidence_score": float,
+            "detected_evidence": str,
+            "key_driver_category": str,
+            "recommended_actions": str,
+            "strengths_to_keep": str,
+            "first_appearance_timestamp": float,
+            "feature_quality_score": float,
+            "feature_specifics": {{
+                "metrics": {{
+                    "synchronicity_score": float,
+                    "text_coverage_ratio": float,
+                    "primary_supers_type": "Dynamic_Captions | Static_Callouts | Headlines | Mixed"
+                }},
+                "visual_analysis": {{
+                    "readability_score": float,
+                    "is_mobile_safe": boolean,
+                    "font_style": "Minimal | Bold/Aggressive | Stylized/Brand"
+                }},
+                "temporal_segments": [
+                    {{
+                        "start": float,
+                        "end": float,
+                        "text_content": str,
+                        "matches_audio": boolean,
+                        "style": "Caption | Emphasis | CTA"
+                    }}
+                ],
+                "overall_assessment": {{
+                    "narrative_reinforcement_score": float,
+                    "is_hook_text_present": boolean,
+                    "summary": str
                 }}
-            ],
-            "overall_assessment": {{
-                "narrative_reinforcement_score": float, # How well text aids understanding
-                "is_hook_text_present": boolean, # Does text appear in the first 1.5 seconds?
-                "summary": "Technical summary of text overlay strategy"
             }}
         }}
 
@@ -367,31 +396,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float, 
-                "feature_quality_score": float, # Based on the Dynamic Scoring scale
-                "metrics": {{
-                    "density_score": float, # MANDATORY: CU duration / Total duration
-                    "average_sfr_percentage": float, # Average Subject-to-Frame ratio for CU shots
-                    "product_identifiability": float, # Clarity of branding (0.0 - 1.0)
-                    "framing_style": "Handheld" | "Studio-Static" | "Pan/Tilt"
-                }},
-                "spatial_analysis": {{
-                    "rule_of_thirds_align": boolean,
-                    "background_distraction_level": "Low" | "Medium" | "High",
-                    "is_product_centered": boolean
-                }},
-                "temporal_segments": [
-                    {{
-                        "start": float,
-                        "end": float,
-                        "sfr_percentage": float,
-                        "description": str 
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "average_sfr_percentage": float,
+                        "product_identifiability": float,
+                        "framing_style": "Handheld | Studio-Static | Pan/Tilt"
+                    }},
+                    "spatial_analysis": {{
+                        "rule_of_thirds_align": boolean,
+                        "background_distraction_level": "Low | Medium | High",
+                        "is_product_centered": boolean
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "sfr_percentage": float,
+                            "description": str 
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "visual_impact_score": float,
+                        "is_hook_product_featured": boolean,
+                        "summary": str
                     }}
-                ],
-                "overall_assessment": {{
-                    "visual_impact_score": float,
-                    "is_hook_product_featured": boolean, # Product CU in first 2 seconds?
-                    "summary": "Technical summary of product CU strategy"
                 }}
             }}
 
@@ -435,32 +471,39 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "feature_quality_score": float, 
-                "metrics": {{
-                    "density_score": float, # MANDATORY: ECU duration / Total duration
-                    "peak_sfr_percentage": float, # Max frame fill observed
-                    "texture_visibility": "Low" | "Medium" | "High", # Does it show material detail?
-                    "lighting_quality": "Flat" | "Cinematic" | "Overexposed"
-                }},
-                "spatial_analysis": {{
-                    "edge_collision": boolean, # Does the product extend beyond frame edges?
-                    "depth_of_field": "Shallow" | "Deep", # Is the background blurred?
-                    "focal_point": str # e.g., "Logo", "Texture", "Nozzle", "Screen"
-                }},
-                "temporal_segments": [
-                    {{
-                        "start": float,
-                        "end": float,
-                        "sfr_percentage": float,
-                        "focus_point": str,
-                        "description": str 
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "peak_sfr_percentage": float,
+                        "texture_visibility": "Low | Medium | High",
+                        "lighting_quality": "Flat | Cinematic | Overexposed"
+                    }},
+                    "spatial_analysis": {{
+                        "edge_collision": boolean,
+                        "depth_of_field": "Shallow | Deep",
+                        "focal_point": str
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "sfr_percentage": float,
+                            "focus_point": str,
+                            "description": str 
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "visual_impact_score": float,
+                        "is_macro_hook": boolean,
+                        "summary": str
                     }}
-                ],
-                "overall_assessment": {{
-                    "visual_impact_score": float,
-                    "is_macro_hook": boolean, # Does the video open with a macro shot?
-                    "summary": "Technical summary of product ECU/Macro strategy"
                 }}
             }}
 
@@ -522,30 +565,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "interaction_depth": {{
-                        "score": int,
-                        "action_type": "physical|consumption|digital|service",
-                        "duration": float,
-                        "evidence": str
-                    }},
-                    "contextual_realism": {{
-                        "score": int,
-                        "environment": str,
-                        "authenticity_level": "natural|staged|studio",
-                        "observation": str
-                    }},
-                    "utility_demo": {{
-                        "score": int,
-                        "benefit_shown": str,
-                        "clarity": "explicit|implicit|none"
-                    }},
-                    "final_scoring": {{
-                        "interaction_weighted": float,
-                        "realism_weighted": float,
-                        "utility_weighted": float,
-                        "total_score": float # Sum of the three weighted scores above
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "interaction_depth": {{
+                            "score": int,
+                            "action_type": "physical|consumption|digital|service",
+                            "duration": float,
+                            "evidence": str
+                        }},
+                        "contextual_realism": {{
+                            "score": int,
+                            "environment": str,
+                            "authenticity_level": "natural|staged|studio",
+                            "observation": str
+                        }},
+                        "utility_demo": {{
+                            "score": int,
+                            "benefit_shown": str,
+                            "clarity": "explicit|implicit|none"
+                        }},
+                        "final_scoring": {{
+                            "interaction_weighted": float,
+                            "realism_weighted": float,
+                            "utility_weighted": float,
+                            "total_score": float
+                        }}
                     }}
                 }}
             }}
@@ -584,17 +635,24 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
                 "feature_quality_score": float,
-                "metrics": {{
-                    "density_score": float,
-                    "slang_presence": boolean,
-                    "filler_word_frequency": "Low" | "Medium" | "High", # e.g., "um", "like", "literally"
-                    "script_type": "Ad-lib/Spontaneous" | "Conversational-Scripted" | "Formal"
-                }},
-                "overall_assessment": {{
-                    "authenticity_score": float, # How 'real' does the speech feel?
-                    "summary": "Analysis of linguistic tone"
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "slang_presence": boolean,
+                        "filler_word_frequency": "Low | Medium | High",
+                        "script_type": "Ad-lib/Spontaneous | Conversational-Scripted | Formal"
+                    }},
+                    "overall_assessment": {{
+                        "authenticity_score": float,
+                        "summary": str
+                    }}
                 }}
             }}
             """,
@@ -627,17 +685,24 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
         ### FORMAT RESPONSE AS JSON:
         {{
             "detected": boolean,
-            "confidence_score": float,
+            "detected_confidence_score": float,
+            "detected_evidence": str,
+            "key_driver_category": str,
+            "recommended_actions": str,
+            "strengths_to_keep": str,
+            "first_appearance_timestamp": float,
             "feature_quality_score": float,
-            "metrics": {{
-                "density_score": float,
-                "humor_mechanism": str, # e.g., "Visual gag", "Funny VO", "Reaction"
-                "edge_factor": float # 0.0 (Safe) to 1.0 (Risky/Bold)
-            }},
-            "overall_assessment": {{
-                "entertainment_value": float,
-                "is_hook_funny": boolean,
-                "summary": "Technical summary of humor strategy"
+            "feature_specifics": {{
+                "metrics": {{
+                    "density_score": float,
+                    "humor_mechanism": str,
+                    "edge_factor": float
+                }},
+                "overall_assessment": {{
+                    "entertainment_value": float,
+                    "is_hook_funny": boolean,
+                    "summary": str
+                }}
             }}
         }}
     """,
@@ -696,16 +761,24 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "character_present": boolean,
-                    "character_type": str,
-                    "personality_traits": [str],
-                    "journey_type": str,
-                    "prominence_score": int,
-                    "journey_score": int,
-                    "relatability_score": int,
-                    "weighted_overall": float
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "character_present": boolean,
+                        "character_type": str,
+                        "personality_traits": [str],
+                        "journey_type": str,
+                        "prominence_score": int,
+                        "journey_score": int,
+                        "relatability_score": int,
+                        "weighted_overall": float
+                    }}
                 }}
             }}""",
           extra_instructions=[],
@@ -746,31 +819,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
         ### FORMAT RESPONSE AS JSON:
         {{
             "detected": boolean,
-            "confidence_score": float, # Certainty that a verbal CTA was issued
-            "feature_quality_score": float, # 0.0-1.0 based on clarity and persuasiveness
-            "metrics": {{
-                "density_score": float, # MANDATORY: CTA duration / Total video duration
-                "cta_urgency_score": float, # 0.0 to 1.0
-                "delivery_method": "On-Screen_Talent" | "Voice-Over" | "Mixed",
-                "cta_type": "Hard_Sell" | "Soft_Suggestion" | "Inspirational"
-            }},
-            "linguistic_analysis": {{
-                "verbatim_text": str, # The exact words used for the CTA
-                "placement_type": "End-Roll" | "Mid-Roll" | "Early-Hook",
-                "contains_incentive": boolean # e.g., "Use code SAVE10", "Free shipping"
-            }},
-            "temporal_segments": [
-                {{
-                    "start": float,
-                    "end": float,
-                    "cta_content": str,
-                    "loudness_relative_to_avg": "Quieter" | "Normal" | "Emphasized"
+            "detected_confidence_score": float,
+            "detected_evidence": str,
+            "key_driver_category": str,
+            "recommended_actions": str,
+            "strengths_to_keep": str,
+            "first_appearance_timestamp": float,
+            "feature_quality_score": float,
+            "feature_specifics": {{
+                "metrics": {{
+                    "density_score": float,
+                    "cta_urgency_score": float,
+                    "delivery_method": "On-Screen_Talent | Voice-Over | Mixed",
+                    "cta_type": "Hard_Sell | Soft_Suggestion | Inspirational"
+                }},
+                "linguistic_analysis": {{
+                    "verbatim_text": str,
+                    "placement_type": "End-Roll | Mid-Roll | Early-Hook",
+                    "contains_incentive": boolean
+                }},
+                "temporal_segments": [
+                    {{
+                        "start": float,
+                        "end": float,
+                        "cta_content": str,
+                        "loudness_relative_to_avg": "Quieter | Normal | Emphasized"
+                    }}
+                ],
+                "overall_assessment": {{
+                    "conversion_potential": float,
+                    "is_cta_at_end": boolean,
+                    "summary": str
                 }}
-            ],
-            "overall_assessment": {{
-                "conversion_potential": float, # How likely is this audio to drive a click?
-                "is_cta_at_end": boolean, # Does the audio end on a CTA?
-                "summary": "Technical analysis of verbal CTA effectiveness"
             }}
         }}
 
@@ -834,16 +914,24 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "offer_type": str,
-                    "offer_details": str,
-                    "delivery_tone": str,
-                    "mention_count": int,
-                    "offer_clarity_score": int,
-                    "emphasis_score": int,
-                    "prominence_score": int,
-                    "weighted_overall": float
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "offer_type": str,
+                        "offer_details": str,
+                        "delivery_tone": str,
+                        "mention_count": int,
+                        "offer_clarity_score": int,
+                        "emphasis_score": int,
+                        "prominence_score": int,
+                        "weighted_overall": float
+                    }}
                 }}
             }}""",
           extra_instructions=[],
@@ -885,31 +973,38 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
         ### FORMAT RESPONSE AS JSON:
         {{
             "detected": boolean,
-            "confidence_score": float, # Certainty of production style classification
-            "feature_quality_score": float, # 0.0-1.0 (How well it executes the intended style)
-            "metrics": {{
-                "density_score": float, # MANDATORY: UGC-style duration / Total video duration
-                "camera_stability": "Handheld" | "Stabilized" | "Tripod/Static",
-                "lighting_type": "Natural/Ambient" | "Studio-Polished" | "Raw/Incidental",
-                "equipment_look": "Mobile_Phone" | "Professional_Camera" | "Webcam"
-            }},
-            "aesthetic_analysis": {{
-                "platform_native_elements": boolean, # Use of top social media app fonts/stickers
-                "environment_realism": "Lived-in/Messy" | "Curated/Clean" | "Studio/Abstract",
-                "interface_compliance": "Safe_Zone_Optimized" | "UI_Overlapped"
-            }},
-            "temporal_segments": [
-                {{
-                    "start": float,
-                    "end": float,
-                    "style_type": "True_UGC" | "Studio_UGC" | "Corporate_Ad",
-                    "description": str 
+            "detected_confidence_score": float,
+            "detected_evidence": str,
+            "key_driver_category": str,
+            "recommended_actions": str,
+            "strengths_to_keep": str,
+            "first_appearance_timestamp": float,
+            "feature_quality_score": float,
+            "feature_specifics": {{
+                "metrics": {{
+                    "density_score": float,
+                    "camera_stability": "Handheld | Stabilized | Tripod/Static",
+                    "lighting_type": "Natural/Ambient | Studio-Polished | Raw/Incidental",
+                    "equipment_look": "Mobile_Phone | Professional_Camera | Webcam"
+                }},
+                "aesthetic_analysis": {{
+                    "platform_native_elements": boolean,
+                    "environment_realism": "Lived-in/Messy | Curated/Clean | Studio/Abstract",
+                    "interface_compliance": "Safe_Zone_Optimized | UI_Overlapped"
+                }},
+                "temporal_segments": [
+                    {{
+                        "start": float,
+                        "end": float,
+                        "style_type": "True_UGC | Studio_UGC | Corporate_Ad",
+                        "description": str 
+                    }}
+                ],
+                "overall_assessment": {{
+                    "lofi_index": float,
+                    "is_hook_native_looking": boolean,
+                    "summary": str
                 }}
-            ],
-            "overall_assessment": {{
-                "lofi_index": float, # 0.0 (Glossy) to 1.0 (Raw)
-                "is_hook_native_looking": boolean, # Does it look like an organic post in the first 2s?
-                "summary": "Technical analysis of the production authenticity and stylistic approach"
             }}
         }}
 
@@ -958,30 +1053,37 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float, 
-                "feature_quality_score": float, # The 0.0-1.0 Authenticity Rating
-                "metrics": {{
-                    "density_score": float, # Duration of organic style / Total duration
-                    "camera_stability": "Handheld" | "Stabilized" | "Static",
-                    "lighting_type": "Natural" | "Studio" | "Mixed",
-                    "edit_style": "Fast-Cut" | "Long-Take" | "Jump-Cuts"
-                }},
-                "aesthetic_analysis": {{
-                    "lofi_index": float, # 0.0 (Glossy) to 1.0 (Raw)
-                    "is_hook_native": boolean, # Does the first 3s look like a post, not an ad?
-                    "platform_native_vibe": boolean # Use of native-style fonts/graphics
-                }},
-                "temporal_segments": [
-                    {{
-                        "start": float,
-                        "end": float,
-                        "style_type": "Native" | "Hybrid" | "Commercial",
-                        "description": str
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "camera_stability": "Handheld | Stabilized | Static",
+                        "lighting_type": "Natural | Studio | Mixed",
+                        "edit_style": "Fast-Cut | Long-Take | Jump-Cuts"
+                    }},
+                    "aesthetic_analysis": {{
+                        "lofi_index": float,
+                        "is_hook_native": boolean,
+                        "platform_native_vibe": boolean
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "style_type": "Native | Hybrid | Commercial",
+                            "description": str
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "visual_impact_score": float,
+                        "summary": str
                     }}
-                ],
-                "overall_assessment": {{
-                    "visual_impact_score": float, # Effectiveness for mobile engagement
-                    "summary": "Concise technical summary of production authenticity"
                 }}
             }}
 
@@ -1028,30 +1130,37 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "feature_quality_score": float, # 0.0-1.0 based on narrative relevance
-                "metrics": {{
-                    "density_score": float, # Total emoji duration / Total duration
-                    "emoji_count_estimate": int, 
-                    "style": "Static" | "Animated" | "Kinetic",
-                    "placement": "Anchored_to_Text" | "Floating" | "Center_Pop"
-                }},
-                "spatial_analysis": {{
-                    "safe_zone_compliance": boolean, # Avoids UI overlap at bottom/right
-                    "primary_purpose": "Emphasis" | "Tone" | "CTA" | "Decorative"
-                }},
-                "temporal_segments": [
-                    {{
-                        "start": float,
-                        "end": float,
-                        "emoji_type": str,
-                        "description": str
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "density_score": float,
+                        "emoji_count_estimate": int, 
+                        "style": "Static | Animated | Kinetic",
+                        "placement": "Anchored_to_Text | Floating | Center_Pop"
+                    }},
+                    "spatial_analysis": {{
+                        "safe_zone_compliance": boolean,
+                        "primary_purpose": "Emphasis | Tone | CTA | Decorative"
+                    }},
+                    "temporal_segments": [
+                        {{
+                            "start": float,
+                            "end": float,
+                            "emoji_type": str,
+                            "description": str
+                        }}
+                    ],
+                    "overall_assessment": {{
+                        "is_hook_emoji": boolean,
+                        "visual_impact_score": float,
+                        "summary": str
                     }}
-                ],
-                "overall_assessment": {{
-                    "is_hook_emoji": boolean, # Emoji present in the first 2 seconds?
-                    "visual_impact_score": float, # Contribution to "organic" feel
-                    "summary": "Summary of emoji integration and effectiveness"
                 }}
             }}
 
@@ -1107,19 +1216,27 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "character_type": str, # e.g., "Creator", "Mascot"
-                    "gaze_consistency": "high"|"medium"|"low",
-                    "delivery_style": str,
-                    "gaze_intensity_score": int,
-                    "delivery_intimacy_score": int,
-                    "temporal_dominance_score": int,
-                    "weighted_overall": float
-                }},
-                "metrics": {{
-                    "density_score": float, # Duration of direct address / Total duration
-                    "is_hook_direct": boolean
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "character_type": str,
+                        "gaze_consistency": "high"|"medium"|"low",
+                        "delivery_style": str,
+                        "gaze_intensity_score": int,
+                        "delivery_intimacy_score": int,
+                        "temporal_dominance_score": int,
+                        "weighted_overall": float
+                    }},
+                    "metrics": {{
+                        "density_score": float,
+                        "is_hook_direct": boolean
+                    }}
                 }}
             }}""",
           extra_instructions=[],
@@ -1171,18 +1288,26 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "integration_method": str, # e.g., "prop", "attire", "verbal"
-                    "primary_focus": str, # What is the main focus if not the brand?
-                    "narrative_score": int,
-                    "visual_subtle_score": int,
-                    "context_score": int,
-                    "weighted_overall": float
-                }},
-                "metrics": {{
-                    "brand_density": float,
-                    "is_brand_dominant": boolean # False is better for this feature
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "integration_method": str,
+                        "primary_focus": str,
+                        "narrative_score": int,
+                        "visual_subtle_score": int,
+                        "context_score": int,
+                        "weighted_overall": float
+                    }},
+                    "metrics": {{
+                        "brand_density": float,
+                        "is_brand_dominant": boolean
+                    }}
                 }}
             }}""",
           extra_instructions=[],
@@ -1212,18 +1337,25 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
             ### FORMAT RESPONSE AS JSON:
             {{
-                "detected": boolean, # TRUE if Everyday Person/Creator, FALSE otherwise
-                "confidence_score": float,
-                "feature_quality_score": float, # 1.0 (Highly Authentic) to 0.0 (Clearly Commercial)
-                "metrics": {{
-                    "is_everyday_person": boolean,
-                    "is_commercial_actor": boolean,
-                    "is_celebrity": boolean,
-                    "is_fictional_mascot": boolean
-                }},
-                "overall_assessment": {{
-                    "authenticity_rating": float, # 0.0 - 1.0 (How 'real' do they feel?)
-                    "sum": "Max 8 words identifying the person's vibe"
+                "detected": boolean,
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "is_everyday_person": boolean,
+                        "is_commercial_actor": boolean,
+                        "is_celebrity": boolean,
+                        "is_fictional_mascot": boolean
+                    }},
+                    "overall_assessment": {{
+                        "authenticity_rating": float,
+                        "summary": str
+                    }}
                 }}
             }}
         """,
@@ -1276,18 +1408,26 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             FORMAT RESPONSE AS JSON:
             {{
                 "detected": boolean,
-                "confidence_score": float,
-                "evaluation": {{
-                    "usage_type": str,
-                    "environment_type": str,
-                    "utility_score": int,
-                    "realism_score": int,
-                    "visual_weight_score": int,
-                    "weighted_overall": float
-                }},
-                "metrics": {{
-                    "avg_sfr_percentage": float,
-                    "is_product_secondary": boolean
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "evaluation": {{
+                        "usage_type": str,
+                        "environment_type": str,
+                        "utility_score": int,
+                        "realism_score": int,
+                        "visual_weight_score": int,
+                        "weighted_overall": float
+                    }},
+                    "metrics": {{
+                        "avg_sfr_percentage": float,
+                        "is_product_secondary": boolean
+                    }}
                 }}
             }}""",
           extra_instructions=[],
@@ -1317,17 +1457,24 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
             JSON ONLY:
             {{
-                "detected": bool,
-                "confidence_score": float,
-                "feature_quality_score": float, 
-                "metrics": {{
-                    "format": "9:16"|"1:1"|"16:9"|"mixed",
-                    "is_letterboxed": bool,
-                    "safe_zone_compliant": bool
-                }},
-                "overall_assessment": {{
-                    "mobile_native_score": float,
-                    "sum": "Max 10 words summary"
+                "detected": boolean,
+                "detected_confidence_score": float,
+                "detected_evidence": str,
+                "key_driver_category": str,
+                "recommended_actions": str,
+                "strengths_to_keep": str,
+                "first_appearance_timestamp": float,
+                "feature_quality_score": float,
+                "feature_specifics": {{
+                    "metrics": {{
+                        "format": "9:16"|"1:1"|"16:9"|"mixed",
+                        "is_letterboxed": boolean,
+                        "safe_zone_compliant": boolean
+                    }},
+                    "overall_assessment": {{
+                        "mobile_native_score": float,
+                        "summary": str
+                    }}
                 }}
             }}
         """,

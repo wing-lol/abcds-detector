@@ -41,3 +41,4 @@ Thumbs.db
 
 # Git
 .git
+tests/test_shorts/test_abcd_run_shorts_main.py
