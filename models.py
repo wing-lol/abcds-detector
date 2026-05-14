@@ -187,6 +187,42 @@ VIDEO_RESPONSE_SCHEMA = {
 }
 
 
+SHORTS_RESPONSE_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "category": {"type": "string"},
+            "sub_category": {"type": "string"},
+            "video_segment": {"type": "string"},
+            "evaluation_criteria": {"type": "string"},
+            "detected": {"type": "boolean"},
+            "confidence_score": {"type": "number"},
+            "rationale": {"type": "string"},
+            "evidence": {"type": "string"},
+            "strengths": {"type": "string"},
+            "weaknesses": {"type": "string"},
+        },
+        "required": [
+            "id",
+            "name",
+            "category",
+            "sub_category",
+            "video_segment",
+            "evaluation_criteria",
+            "detected",
+            "confidence_score",
+            "rationale",
+            "evidence",
+            "strengths",
+            "weaknesses",
+        ],
+    },
+}
+
+
 VIDEO_METADATA_RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
