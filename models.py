@@ -77,6 +77,21 @@ class FeatureEvaluation:
 
 
 @dataclass
+class ShortsFeatureEvaluation(FeatureEvaluation):
+  """Class that represents the evaluation of a Shorts feature with new scores."""
+
+  detected_confidence_score: float | None = None
+  detected_evidence: str | None = None
+  key_driver_category: str | None = None
+  recommended_actions: str | None = None
+  strengths_to_keep: str | None = None
+  first_appearance_timestamp: float | None = None
+  feature_density_score: float | None = None
+  feature_quality_score: float | None = None
+  feature_specifics: dict | None = None
+
+
+@dataclass
 class VideoAssessment:
   """Class that represents the evaluation of a feature"""
 

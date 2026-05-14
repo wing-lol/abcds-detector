@@ -28,6 +28,39 @@ from models import (
     VideoFeatureSubCategory,
 )
 
+BASE_RESPONSE_FORMAT = """
+            ### 3. FORMAT RESPONSE AS JSON:
+
+            **FIELD DESCRIPTIONS:**
+            - detected: boolean (True if feature is present, False otherwise)
+            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
+            - detected_evidence: string (Description of cues and timestamps)
+            - key_driver_category: string (Categorical reason for the score)
+            - recommended_actions: string (Actionable next step for the editor)
+            - strengths_to_keep: string (What the editor did right)
+            - first_appearance_timestamp: float (When this feature first appeared)
+            - feature_density_score: float (0.0 to 1.0; {density_description})
+            - feature_quality_score: float (0.0 to 1.0; {quality_description})
+            - feature_specifics: object containing:
+{specifics_descriptions}
+
+            **OUTPUT STRUCTURE:**
+            {{
+                "detected": true,
+                "detected_confidence_score": 0.95,
+                "detected_evidence": "string",
+                "key_driver_category": "string",
+                "recommended_actions": "string",
+                "strengths_to_keep": "string",
+                "first_appearance_timestamp": 2.5,
+                "feature_density_score": 0.5,
+                "feature_quality_score": 0.8,
+                "feature_specifics": {{
+{specifics_json}
+                }}
+            }}
+"""
+
 
 def get_shorts_feature_configs() -> list[VideoFeature]:
   """Gets all the supported ABCD/Shorts features.
@@ -79,42 +112,17 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                    - Give a bonus if the first 3 seconds (The Hook) contain tight framing.
                    - Score from 0.0 to 1.0 reflecting effectiveness.
                 5. Rationale & Evidence: Cite specific timestamps and shot durations.
-
-                ### 3. FORMAT RESPONSE AS JSON:
-
-                **FIELD DESCRIPTIONS:**
-                - detected: boolean (True if feature is present, False otherwise)
-                - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-                - detected_evidence: string (Description of cues and timestamps)
-                - key_driver_category: string (Categorical reason for the score)
-                - recommended_actions: string (Actionable next step for the editor)
-                - strengths_to_keep: string (What the editor did right)
-                - first_appearance_timestamp: float (When this feature first appeared)
-                - feature_density_score: float (0.0 to 1.0; proportion of video in CU/ECU)
-                - feature_quality_score: float (0.0 to 1.0; effectiveness of tight framing)
-                - feature_specifics: object containing:
-                    - peak_sfr_percentage: float (highest ratio observed)
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              density_description="proportion of video in CU/ECU",
+              quality_description="effectiveness of tight framing",
+              specifics_descriptions="""                    - peak_sfr_percentage: float (highest ratio observed)
                     - primary_subject_class: string (e.g., Product, Human_Face)
-                    - framing_cadence: string (e.g., Static, Fast-Cutting)
-
-                **OUTPUT STRUCTURE:**
-                {{
-                    "detected": boolean,
-                    "detected_confidence_score": float,
-                    "detected_evidence": string,
-                    "key_driver_category": string,
-                    "recommended_actions": string,
-                    "strengths_to_keep": string,
-                    "first_appearance_timestamp": float,
-                    "feature_density_score": float,
-                    "feature_quality_score": float,
-                    "feature_specifics": {{
-                        "peak_sfr_percentage": float,
-                        "primary_subject_class": string,
-                        "framing_cadence": string
-                    }}
-                }}
-            """,
+                    - framing_cadence: string (e.g., Static, Fast-Cutting)""",
+              specifics_json="""                    "peak_sfr_percentage": 0.85,
+                    "primary_subject_class": "Product",
+                    "framing_cadence": "Static" """,
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -162,45 +170,21 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and durations.
 
             ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; calculated as 
-              (Total Speech Time / Total Duration))
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              clarity and hook)
-            - feature_specifics: object containing:
-                - vocal_clarity_score: float
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              density_description=(
+                  "calculated as (Total Speech Time / Total Duration)"
+              ),
+              quality_description="effectiveness based on clarity and hook",
+              specifics_descriptions="""                - vocal_clarity_score: float
                 - primary_voice_type: string (e.g., Voice_Over, Dialogue, Mixed)
-                - speech_cadence: string (e.g., Constant, Intermittent, Rapid, 
-                  Slow)
-                - background_noise_level: string (e.g., Low, Medium, High)
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "vocal_clarity_score": float,
-                    "primary_voice_type": string,
-                    "speech_cadence": string,
-                    "background_noise_level": string
-                }}
-            }}
-        """,
+                - speech_cadence: string (e.g., Constant, Intermittent, Rapid, Slow)
+                - background_noise_level: string (e.g., Low, Medium, High)""",
+              specifics_json="""                    "vocal_clarity_score": 0.8,
+                    "primary_voice_type": "Voice_Over",
+                    "speech_cadence": "Constant",
+                    "background_noise_level": "Low" """,
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -246,44 +230,19 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                    - Give a bonus (+0.1) if direct address starts in the first 2 seconds (Hook).
                    - Score from 0.0 to 1.0 reflecting effectiveness.
                 5. Rationale & Evidence: Cite specific timestamps and durations.
-
-                ### 3. FORMAT RESPONSE AS JSON:
-
-                **FIELD DESCRIPTIONS:**
-                - detected: boolean (True if feature is present, False otherwise)
-                - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-                - detected_evidence: string (Description of cues and timestamps)
-                - key_driver_category: string (Categorical reason for the score)
-                - recommended_actions: string (Actionable next step for the editor)
-                - strengths_to_keep: string (What the editor did right)
-                - first_appearance_timestamp: float (When this feature first appeared)
-                - feature_density_score: float (0.0 to 1.0; proportion of video with direct address)
-                - feature_quality_score: float (0.0 to 1.0; effectiveness based on intensity and hook)
-                - feature_specifics: object containing:
-                    - eye_contact_intensity: float
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              density_description="proportion of video with direct address",
+              quality_description="effectiveness based on intensity and hook",
+              specifics_descriptions="""                    - eye_contact_intensity: float
                     - subject_distance: string (e.g., Close-Up, Medium)
                     - address_style: string (e.g., Intimate, Presentational)
-                    - emotional_delivery: string
-
-                **OUTPUT STRUCTURE:**
-                {{
-                    "detected": boolean,
-                    "detected_confidence_score": float,
-                    "detected_evidence": string,
-                    "key_driver_category": string,
-                    "recommended_actions": string,
-                    "strengths_to_keep": string,
-                    "first_appearance_timestamp": float,
-                    "feature_density_score": float,
-                    "feature_quality_score": float,
-                    "feature_specifics": {{
-                        "eye_contact_intensity": float,
-                        "subject_distance": string,
-                        "address_style": string,
-                        "emotional_delivery": string
-                    }}
-                }}
-            """,
+                    - emotional_delivery: string""",
+              specifics_json="""                    "eye_contact_intensity": 0.9,
+                    "subject_distance": "Close-Up",
+                    "address_style": "Intimate",
+                    "emotional_delivery": "Confident" """,
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
