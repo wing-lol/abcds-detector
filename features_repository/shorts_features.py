@@ -38,7 +38,7 @@ BASE_RESPONSE_FORMAT = """
             - key_driver_category: string (Categorical reason for the score)
             - recommended_actions: string (Actionable next step for the editor)
             - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
+            - first_appearance_timestamp: string (When this feature first appeared, format MM:SS)
             - feature_density_score: float (0.0 to 1.0; {density_description})
             - feature_quality_score: float (0.0 to 1.0; {quality_description})
             - feature_specifics: object containing:
@@ -46,15 +46,15 @@ BASE_RESPONSE_FORMAT = """
 
             **OUTPUT STRUCTURE:**
             {{
-                "detected": true,
-                "detected_confidence_score": 0.95,
-                "detected_evidence": "string",
-                "key_driver_category": "string",
-                "recommended_actions": "string",
-                "strengths_to_keep": "string",
-                "first_appearance_timestamp": 2.5,
-                "feature_density_score": 0.5,
-                "feature_quality_score": 0.8,
+                "detected": boolean,
+                "detected_confidence_score": float,
+                "detected_evidence": string,
+                "key_driver_category": string,
+                "recommended_actions": string,
+                "strengths_to_keep": string,
+                "first_appearance_timestamp": string,
+                "feature_density_score": float,
+                "feature_quality_score": float,
                 "feature_specifics": {{
 {specifics_json}
                 }}
@@ -114,14 +114,16 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 5. Rationale & Evidence: Cite specific timestamps and shot durations.
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description="proportion of video in CU/ECU",
-              quality_description="effectiveness of tight framing",
-              specifics_descriptions="""                    - peak_sfr_percentage: float (highest ratio observed)
-                    - primary_subject_class: string (e.g., Product, Human_Face)
-                    - framing_cadence: string (e.g., Static, Fast-Cutting)""",
-              specifics_json="""                    "peak_sfr_percentage": 0.85,
-                    "primary_subject_class": "Product",
-                    "framing_cadence": "Static" """,
+              density_description="as calculated in the Evaluation Logic for feature_density_score",
+              quality_description="as calculated in the Evaluation Logic for feature_quality_score",
+              specifics_descriptions="""                    
+                - peak_sfr_percentage: float (highest ratio observed)
+                - primary_subject_class: string (e.g., Product, Human_Face)
+                - framing_cadence: string (e.g., Static, Fast-Cutting)""",
+              specifics_json="""                    
+              "peak_sfr_percentage": 0.85,
+                "primary_subject_class": "Product",
+                "framing_cadence": "Static" """,
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -172,10 +174,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             ### 3. FORMAT RESPONSE AS JSON:
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description=(
-                  "calculated as (Total Speech Time / Total Duration)"
-              ),
-              quality_description="effectiveness based on clarity and hook",
+              density_description="as calculated in the EVALUATION LOGIC for feature_density_score",
+              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
               specifics_descriptions="""                - vocal_clarity_score: float
                 - primary_voice_type: string (e.g., Voice_Over, Dialogue, Mixed)
                 - speech_cadence: string (e.g., Constant, Intermittent, Rapid, Slow)
