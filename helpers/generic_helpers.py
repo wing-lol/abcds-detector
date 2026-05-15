@@ -313,7 +313,7 @@ def get_shorts_table_columns_schema() -> list[dict]:
       },
       {
           "column": "first_appearance_timestamp",
-          "data_type": bigquery.enums.SqlTypeNames.FLOAT,
+          "data_type": bigquery.enums.SqlTypeNames.STRING,
       },
       {
           "column": "feature_density_score",

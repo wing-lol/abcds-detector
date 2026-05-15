@@ -42,7 +42,7 @@ BASE_RESPONSE_FORMAT = """
             - feature_density_score: float (0.0 to 1.0; {density_description})
             - feature_quality_score: float (0.0 to 1.0; {quality_description})
             - feature_specifics: object containing:
-{specifics_descriptions}
+{specifics}
 
             **OUTPUT STRUCTURE:**
             {{
@@ -56,7 +56,7 @@ BASE_RESPONSE_FORMAT = """
                 "feature_density_score": float,
                 "feature_quality_score": float,
                 "feature_specifics": {{
-{specifics_json}
+{specifics}
                 }}
             }}
 """
@@ -116,14 +116,10 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
           + BASE_RESPONSE_FORMAT.format(
               density_description="as calculated in the Evaluation Logic for feature_density_score",
               quality_description="as calculated in the Evaluation Logic for feature_quality_score",
-              specifics_descriptions="""                    
-                - peak_sfr_percentage: float (highest ratio observed)
-                - primary_subject_class: string (e.g., Product, Human_Face)
-                - framing_cadence: string (e.g., Static, Fast-Cutting)""",
-              specifics_json="""                    
-              "peak_sfr_percentage": 0.85,
-                "primary_subject_class": "Product",
-                "framing_cadence": "Static" """,
+              specifics="""
+                    "peak_sfr_percentage": float,
+                    "primary_subject_class": string,
+                    "framing_cadence": string""",
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -176,14 +172,11 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
           + BASE_RESPONSE_FORMAT.format(
               density_description="as calculated in the EVALUATION LOGIC for feature_density_score",
               quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
-              specifics_descriptions="""                - vocal_clarity_score: float
-                - primary_voice_type: string (e.g., Voice_Over, Dialogue, Mixed)
-                - speech_cadence: string (e.g., Constant, Intermittent, Rapid, Slow)
-                - background_noise_level: string (e.g., Low, Medium, High)""",
-              specifics_json="""                    "vocal_clarity_score": 0.8,
-                    "primary_voice_type": "Voice_Over",
-                    "speech_cadence": "Constant",
-                    "background_noise_level": "Low" """,
+              specifics="""
+                    "vocal_clarity_score": float,
+                    "primary_voice_type": string,
+                    "speech_cadence": string,
+                    "background_noise_level": string"""
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -233,15 +226,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 """
           + BASE_RESPONSE_FORMAT.format(
               density_description="proportion of video with direct address",
-              quality_description="effectiveness based on intensity and hook",
-              specifics_descriptions="""                    - eye_contact_intensity: float
-                    - subject_distance: string (e.g., Close-Up, Medium)
-                    - address_style: string (e.g., Intimate, Presentational)
-                    - emotional_delivery: string""",
-              specifics_json="""                    "eye_contact_intensity": 0.9,
-                    "subject_distance": "Close-Up",
-                    "address_style": "Intimate",
-                    "emotional_delivery": "Confident" """,
+              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
+              specifics="""
+                    "eye_contact_intensity": float,
+                    "subject_distance": string,
+                    "address_style": string,
+                    "emotional_delivery": string"""
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -277,51 +267,21 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             2. Detection Decision: Set `detected` to True if `detected_confidence_score` >= 0.4. Otherwise set to False.
             3. Calculate feature_density_score: (Total duration where text overlays are visible) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
-               - Base score on Synchronicity (how well text matches spoken words) and Readability (0.0 to 1.0).
-               - Give a bonus (+0.1) if the text is in the "Mobile Safe Zone".
-               - Score from 0.0 to 1.0 reflecting effectiveness.
+               - Formula: (readability_score + synchronicity_score) / 2
+               - Bonus_score: Add +0.1 if the text is in the "Mobile Safe Zone".
+               - Cap the final score at 1.0.
             5. Rationale & Evidence: Cite specific timestamps and text content.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with 
-              text overlays)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              synchronicity and readability)
-            - feature_specifics: object containing:
-                - synchronicity_score: float
-                - text_coverage_ratio: float
-                - primary_supers_type: string (e.g., Dynamic_Captions, Headlines)
-                - readability_score: float
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "synchronicity_score": float,
-                    "text_coverage_ratio": float,
-                    "primary_supers_type": string,
-                    "readability_score": float
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              density_description="as calculated in the EVALUATION LOGIC for feature_density_score",
+              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
+              specifics="""
+                    "readability_score": float (as used in the feature_quality_score formula),
+                    "synchronicity_score": float (as used in the feature_quality_score formula),
+                    "quality_bonus_score": float (as used in the feature_quality_score formula),
+                    "primary_supers_type": string (e.g., Dynamic_Captions, Headlines)"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",

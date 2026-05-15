@@ -44,3 +44,4 @@ Thumbs.db
 tests/test_shorts/test_abcd_run_shorts_main.py
 .venv
 requirements.txt
+tests/test_abcd_shorts.py
