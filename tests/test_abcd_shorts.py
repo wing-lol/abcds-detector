@@ -34,7 +34,7 @@ def run_evaluation():
         bucket_name="solomon_abcd_ds",
         knowledge_graph_api_key=api_key,
         bigquery_dataset="abcd_detector_ds",
-        bigquery_table="abcd_assessments_shopify_v4",
+        bigquery_table="abcd_assessments_shopify_v7",
         assessment_file="",
         extract_brand_metadata=False,
         use_annotations=False,
@@ -66,13 +66,13 @@ def run_evaluation():
     
     # Set video to evaluate
     config.set_videos([
-        # "gs://solomon_abcd_ds/videos/p8cvwBx4FFk.mp4",
-        "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4"
+        "gs://solomon_abcd_ds/videos/p8cvwBx4FFk.mp4",
         # "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4"
+        "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/iT_lVoBHRSY.mp4" # easy to build
     ])
     
     # Run evaluation
-    print("📹 Video: gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4")
+    print("📹 Video: gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/iT_lVoBHRSY.mp4")
     print("🔍 Running Shorts evaluation with Heartbeat feature...")
     print("⏳ This will take a few minutes (LLM inference on video)...\n")
     

@@ -142,12 +142,11 @@ class VideoEvaluationService:
                 models.ShortsFeatureEvaluation(
                     feature=feature,
                     detected=evaluated_feature.get("detected"),
-                    confidence_score=evaluated_feature.get("detected_confidence_score") or 0.0,
+                    confidence_score=evaluated_feature.get("confidence_score") or 0.0,
                     rationale="",
                     evidence=evaluated_feature.get("detected_evidence") or "",
                     strengths=evaluated_feature.get("strengths_to_keep") or "",
                     weaknesses=evaluated_feature.get("recommended_actions") or "",
-                    detected_confidence_score=evaluated_feature.get("detected_confidence_score"),
                     detected_evidence=evaluated_feature.get("detected_evidence"),
                     key_driver_category=evaluated_feature.get("key_driver_category"),
                     recommended_actions=evaluated_feature.get("recommended_actions"),

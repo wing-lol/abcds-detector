@@ -80,7 +80,6 @@ class FeatureEvaluation:
 class ShortsFeatureEvaluation(FeatureEvaluation):
   """Class that represents the evaluation of a Shorts feature with new scores."""
 
-  detected_confidence_score: float | None = None
   detected_evidence: str | None = None
   key_driver_category: str | None = None
   recommended_actions: str | None = None
@@ -228,7 +227,7 @@ SHORTS_RESPONSE_SCHEMA = {
             "detected": {
                 "type": "boolean",
             },
-            "detected_confidence_score": {
+            "confidence_score": {
                 "type": "number",
             },
             "detected_evidence": {
@@ -291,6 +290,18 @@ SHORTS_RESPONSE_SCHEMA = {
                     "background_noise_level": {
                         "type": "string",
                     },
+                    "camera_stability": {
+                        "type": "string",
+                    },
+                    "lighting_type": {
+                        "type": "string",
+                    },
+                    "equipment_look": {
+                        "type": "string",
+                    },
+                    "environment_realism": {
+                        "type": "string",
+                    },
                 }
             },
         },
@@ -302,7 +313,7 @@ SHORTS_RESPONSE_SCHEMA = {
             "video_segment",
             "evaluation_criteria",
             "detected",
-            "detected_confidence_score",
+            "confidence_score",
             "detected_evidence",
             "key_driver_category",
             "recommended_actions",

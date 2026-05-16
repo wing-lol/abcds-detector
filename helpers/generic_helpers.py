@@ -292,7 +292,7 @@ def get_shorts_table_columns_schema() -> list[dict]:
           "data_type": bigquery.enums.SqlTypeNames.BOOLEAN,
       },
       {
-          "column": "detected_confidence_score",
+          "column": "confidence_score",
           "data_type": bigquery.enums.SqlTypeNames.FLOAT,
       },
       {
@@ -587,7 +587,7 @@ def build_features_for_bq(
           "feature_video_segment": eval_feature.feature.video_segment.value,
           "feature_evaluation_criteria": eval_feature.feature.evaluation_criteria,
           "detected": eval_feature.detected,
-          "detected_confidence_score": eval_feature.detected_confidence_score,
+          "confidence_score": eval_feature.confidence_score,
           "detected_evidence": eval_feature.detected_evidence,
           "key_driver_category": eval_feature.key_driver_category,
           "recommended_actions": eval_feature.recommended_actions,

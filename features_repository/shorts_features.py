@@ -29,25 +29,34 @@ from models import (
 )
 
 BASE_RESPONSE_FORMAT = """
-            ### 3. FORMAT RESPONSE AS JSON:
+            ### 3. GENERAL GUIDANCE FOR FIELDS:
+            - **Shorts Benchmarking**: All evaluations must be tailored specifically to Short-Form Video (Shorts) content. Use the creative criteria and best practices of successful short-form video advertisers as your benchmark for quality and effectiveness.
+            - **confidence_score**: This score must reflect your confidence in your final detected decision (whether True or False). A high score means you are certain about your answer; a low score means the video evidence is ambiguous or hard to evaluate.
+            - **detected_evidence**: Always include specific timestamps and visual/audible cues to support your claims.
+            - **recommended_actions**: 
+               - Must be a specific, concrete, and actionable next step for the editor to improve this feature. Avoid generic advice. 
+               - You MUST provide a specific recommendation if the feature is missing or if the `feature_quality_score` is low (<= 0.4).
+               - If the feature is fully optimized and no improvement is needed, return "Great job! This feature is already fully optimized." 
+
+            ### 4. FORMAT RESPONSE AS JSON:
 
             **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
+            - detected: boolean (True if feature is present, False otherwise; as calculated in the EVALUATION LOGIC section for detected)
+            - confidence_score: float (0.0 to 1.0; confidence in your True/False decision; as calculated in the EVALUATION LOGIC section for confidence_score)
             - detected_evidence: string (Description of cues and timestamps)
             - key_driver_category: string (Categorical reason for the score)
             - recommended_actions: string (Actionable next step for the editor)
             - strengths_to_keep: string (What the editor did right)
             - first_appearance_timestamp: string (When this feature first appeared, format MM:SS)
-            - feature_density_score: float (0.0 to 1.0; {density_description})
-            - feature_quality_score: float (0.0 to 1.0; {quality_description})
+            - feature_density_score: float (0.0 to 1.0; represents the persistence or percentage of duration the feature is present; as calculated in the EVALUATION LOGIC section for feature_density_score)
+            - feature_quality_score: float (0.0 to 1.0; represents the effectiveness and creative quality of the execution; as calculated in the EVALUATION LOGIC section for feature_quality_score)
             - feature_specifics: object containing:
 {specifics}
 
             **OUTPUT STRUCTURE:**
             {{
                 "detected": boolean,
-                "detected_confidence_score": float,
+                "confidence_score": float,
                 "detected_evidence": string,
                 "key_driver_category": string,
                 "recommended_actions": string,
@@ -100,11 +109,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 - Wide/Long Shot (LS): Subject fills <30% of frame.
 
                 ### 2. EVALUATION LOGIC:
-                1. Set detected_confidence_score: Score from 0.0 to 1.0 based on
-                   how clearly the subject fills the frame and how unambiguous the shot
-                   type is (regardless of duration).
-                2. Detection Decision: Set `detected` to True if
-                   `detected_confidence_score` >= 0.4. Otherwise set to False.
+                1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the subject fills the frame and how unambiguous the shot type is. Otherwise set to False.
+                2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
                 3. Calculate feature_density_score: (Total CU+ECU duration) /
                    (Total video duration) = raw float value between 0.0 and 1.0.
                 4. Calculate feature_quality_score: 
@@ -114,12 +120,10 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 5. Rationale & Evidence: Cite specific timestamps and shot durations.
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description="as calculated in the Evaluation Logic for feature_density_score",
-              quality_description="as calculated in the Evaluation Logic for feature_quality_score",
               specifics="""
-                    "peak_sfr_percentage": float,
-                    "primary_subject_class": string,
-                    "framing_cadence": string""",
+                    "peak_sfr_percentage": float (Highest Subject-to-Frame Ratio observed in the video, e.g., 0.85),
+                    "primary_subject_class": string (Category of the main subject, e.g., Human, Product, Text),
+                    "framing_cadence": string (Rhythm of shot changes, e.g., Rapid cuts, Static, Smooth transitions)""",
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -154,11 +158,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
               High score = studio quality/clear; Low score = muffled, heavy background noise.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how clearly the 
-               voice is audible and identifiable (regardless of duration). High score for clear, 
-               isolated voice; lower score for muffled voice or heavy background noise overlap.
-            2. Detection Decision: Set `detected` to True if `detected_confidence_score` >= 0.4. 
-               Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the voice is audible and identifiable. Otherwise set to False.
+            2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Total duration of audible human speech) / 
                (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -166,17 +167,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Give a bonus (+0.1) if the speech starts in the first 3 seconds (The Hook).
                - Score from 0.0 to 1.0 reflecting effectiveness.
             5. Rationale & Evidence: Cite specific timestamps and durations.
-
-            ### 3. FORMAT RESPONSE AS JSON:
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description="as calculated in the EVALUATION LOGIC for feature_density_score",
-              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
               specifics="""
-                    "vocal_clarity_score": float,
-                    "primary_voice_type": string,
-                    "speech_cadence": string,
-                    "background_noise_level": string"""
+                    "vocal_clarity_score": float (Clarity of speech from 0.0 to 1.0, where 1.0 is studio quality),
+                    "primary_voice_type": string (Type of voice, e.g., Voice Over, Dialogue, Ambient, Synthetic),
+                    "speech_cadence": string (Pace of speaking, e.g., Fast, Measured, Conversational),
+                    "background_noise_level": string (Level of background noise, e.g., Low, Moderate, High)""",
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -210,12 +207,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 - Off-Camera: Subject is looking at a secondary point, not the viewer.
 
                 ### 2. EVALUATION LOGIC:
-                1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-                   clearly the subject's pupils are directed at the camera lens (regardless 
-                   of duration). High score for locked gaze; lower score if looking at 
-                   scripts/monitors or if eyes are blurry.
-                2. Detection Decision: Set `detected` to True if 
-                   `detected_confidence_score` >= 0.4. Otherwise set to False.
+                1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the subject's pupils are directed at the camera lens. Otherwise set to False.
+                2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
                 3. Calculate feature_density_score: (Total duration of direct eye 
                    contact / address) / (Total video duration) = raw float value between 0.0 and 1.0.
                 4. Calculate feature_quality_score: 
@@ -225,13 +218,11 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                 5. Rationale & Evidence: Cite specific timestamps and durations.
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description="proportion of video with direct address",
-              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
               specifics="""
-                    "eye_contact_intensity": float,
-                    "subject_distance": string,
-                    "address_style": string,
-                    "emotional_delivery": string"""
+                    "eye_contact_intensity": float (Strength of gaze from 0.0 to 1.0),
+                    "subject_distance": string (e.g., Extreme Close-Up, Close-Up, Medium),
+                    "address_style": string (e.g., Direct Address, Silent Gaze, Glance),
+                    "emotional_delivery": string (e.g., Enthusiastic, Serious, Casual)""",
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -263,8 +254,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Headlines: Large top/bottom text bars that stay throughout the video.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how clearly the text is legible and identifiable as a creative overlay (regardless of duration). High score for clear, contrasty text; lower score for blurry, small, or overlapping text.
-            2. Detection Decision: Set `detected` to True if `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the text is legible and identifiable as a creative overlay (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Total duration where text overlays are visible) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
                - Formula: (readability_score + synchronicity_score) / 2
@@ -274,13 +265,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
 """
           + BASE_RESPONSE_FORMAT.format(
-              density_description="as calculated in the EVALUATION LOGIC for feature_density_score",
-              quality_description="as calculated in the EVALUATION LOGIC for feature_quality_score",
               specifics="""
                     "readability_score": float (as used in the feature_quality_score formula),
                     "synchronicity_score": float (as used in the feature_quality_score formula),
                     "quality_bonus_score": float (as used in the feature_quality_score formula),
-                    "primary_supers_type": string (e.g., Dynamic_Captions, Headlines)"""
+                    "primary_supers_type": string
+                    (e.g., Dynamic_Captions, Headlines)"""
           ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
@@ -309,12 +299,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Product Close-Up (CU): Product occupies 30% to 59% of the frame area.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the product is identifiable and in focus (regardless of 
-               duration). High score for clear branding and full view; lower 
-               score for blurry or obstructed views.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the product is identifiable and in focus (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
             3. Calculate feature_density_score: (Total duration of Product CU 
                shots) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -323,44 +309,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness.
             5. Rationale & Evidence: Cite specific timestamps and shot durations.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with 
-              product close-up)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              identifiability and framing)
-            - feature_specifics: object containing:
-                - average_sfr_percentage: float
-                - product_identifiability: float
-                - framing_style: string (e.g., Handheld, Studio-Static)
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "average_sfr_percentage": float,
-                    "product_identifiability": float,
-                    "framing_style": string
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "average_sfr_percentage": float (Average Subject-to-Frame Ratio for product shots),
+                    "product_identifiability": float (Clarity of branding from 0.0 to 1.0),
+                    "framing_style": string (e.g., Centered, Rule of Thirds)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -388,49 +343,20 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Product Extreme Close-Up (ECU): Product occupies 60% or more of the frame area.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how clearly the product's fine details and textures are visible and in focus (regardless of duration). High score for macro shots showing product quality; lower score for blurry or out-of-focus ECU shots.
-            2. Detection Decision: Set `detected` to True if `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the products fine details and textures are visible and in focus (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
             3. Calculate feature_density_score: (Total duration of Product ECU shots) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
                - Base score on Texture Visibility and Lighting Quality (0.0 to 1.0).
                - Score from 0.0 to 1.0 reflecting effectiveness in showcasing high detail.
             5. Rationale & Evidence: Cite specific timestamps and shot durations.
-
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with product ECU)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on texture and lighting)
-            - feature_specifics: object containing:
-                - peak_sfr_percentage: float
-                - texture_visibility: string (e.g., Low, Medium, High)
-                - lighting_quality: string (e.g., Flat, Cinematic)
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "peak_sfr_percentage": float,
-                    "texture_visibility": string,
-                    "lighting_quality": string
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "peak_sfr_percentage": float (Highest Subject-to-Frame Ratio for product shots),
+                    "texture_visibility": string (Visibility of fine details, e.g., High, Moderate, Low),
+                    "lighting_quality": string (Quality of lighting, e.g., Soft, Harsh, Studio)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -462,12 +388,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - UTILITY DEMONSTRATION (30% weight): Shows product's purpose/benefit.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly identifiable the product and its usage are (regardless of 
-               duration or quality score). High score for clear, unambiguous 
-               demonstration; lower score for blurry or obscured usage.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly identifiable the product and its usage are (regardless of duration or quality score). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
             3. Calculate feature_density_score: (Duration of active product usage) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -479,44 +401,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and actions 
                supporting the scores.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with 
-              active product usage)
-            - feature_quality_score: float (0.0 to 1.0; weighted average of quality 
-              dimensions)
-            - feature_specifics: object containing:
-                - interaction_depth_score: int
-                - contextual_realism_score: int
-                - utility_demo_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "interaction_depth_score": int,
-                    "contextual_realism_score": int,
-                    "utility_demo_score": int
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "interaction_depth_score": int (Score for physical engagement from 0 to 100),
+                    "contextual_realism_score": int (Score for realistic environment from 0 to 100),
+                    "utility_demo_score": int (Score for showing purpose/benefit from 0 to 100)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -545,12 +436,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
               0.5 = Standard commercial; 0.0 = Corporate/Medical.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify slang, filler words, or conversational 
-               structures (regardless of duration). High score for clear audio 
-               and obvious slang; lower score for ambiguous or subtle informality.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can identify slang, filler words, or conversational structures (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
             3. Calculate feature_density_score: (Duration of conversational/casual 
                speech) / (Total speech duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -559,44 +446,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness in sounding native.
             5. Rationale & Evidence: Cite specific phrases and timestamps.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of speech 
-              that is casual)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              informality)
-            - feature_specifics: object containing:
-                - slang_presence: boolean
-                - filler_word_frequency: string (e.g., Low, Medium, High)
-                - script_type: string (e.g., Formal, Conversational)
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "slang_presence": boolean,
-                    "filler_word_frequency": string,
-                    "script_type": string
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "slang_presence": boolean (True if slang or informal words are present),
+                    "filler_word_frequency": string (e.g., High, Moderate, Low),
+                    "script_type": string (e.g., Conversational, Scripted, Spontaneous)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -623,12 +479,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Humor Type: "Observational", "Slapstick", "Deadpan", "Satirical".
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify attempts at humor or comedic timing 
-               (regardless of duration). High score for clear obvious jokes or 
-               comedic delivery; lower score for ambiguous or dry humor.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can identify attempts at humor or comedic timing (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of comedic setups/payoffs) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -637,41 +489,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness.
             5. Rationale & Evidence: Cite specific timestamps and comedic moments.
 
-                ### 3. FORMAT RESPONSE AS JSON:
-
-                **FIELD DESCRIPTIONS:**
-                - detected: boolean (True if feature is present, False otherwise)
-                - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-                  of detection)
-                - detected_evidence: string (Description of cues and timestamps)
-                - key_driver_category: string (Categorical reason for the score)
-                - recommended_actions: string (Actionable next step for the editor)
-                - strengths_to_keep: string (What the editor did right)
-                - first_appearance_timestamp: float (When this feature first appeared)
-                - feature_density_score: float (0.0 to 1.0; proportion of video 
-                  containing humor)
-                - feature_quality_score: float (0.0 to 1.0; effectiveness based on timing and edge factor)
-                - feature_specifics: object containing:
-                    - humor_mechanism: string (e.g., Slapstick, Deadpan)
-                    - edge_factor: float
-
-                **OUTPUT STRUCTURE:**
-                {{
-                    "detected": boolean,
-                    "detected_confidence_score": float,
-                    "detected_evidence": string,
-                    "key_driver_category": string,
-                    "recommended_actions": string,
-                    "strengths_to_keep": string,
-                    "first_appearance_timestamp": float,
-                    "feature_density_score": float,
-                    "feature_quality_score": float,
-                    "feature_specifics": {{
-                        "humor_mechanism": string,
-                        "edge_factor": float
-                    }}
-                }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "humor_mechanism": string (Type of humor, e.g., Observational, Slapstick, Deadpan),
+                    "edge_factor": float (How daring or unique the humor is from 0.0 to 1.0)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -701,12 +524,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - AUDIENCE RELATABILITY (30% weight): Relatable to target audience.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the character is identifiable as a protagonist 
-               (regardless of duration). High score for clear lead role; lower 
-               score for ambiguous or background characters.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the character is identifiable as a protagonist (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of character prominence) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -718,43 +537,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and actions 
                supporting the scores.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with character prominence)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on dimensions)
-            - feature_specifics: object containing:
-                - character_type: string
-                - prominence_score: int
-                - journey_score: int
-                - relatability_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "character_type": string,
-                    "prominence_score": int,
-                    "journey_score": int,
-                    "relatability_score": int
-                }}
-            }}""",
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "character_type": string (e.g., Creator, Actor, Celebrity),
+                    "prominence_score": int (Score for character dominance from 0 to 100),
+                    "journey_score": int (Score for visible journey from 0 to 100),
+                    "relatability_score": int (Score for audience relatability from 0 to 100)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -785,12 +575,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Off-Camera: Secondary character or background voice mentions the action.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the spoken CTA is audible and identifiable (regardless of 
-               duration). High score for clear, imperative commands; lower 
-               score for ambiguous or buried mentions.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the spoken CTA is audible and identifiable (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Total duration of the spoken 
                CTA) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -798,48 +584,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                  with time-sensitivity; 0.5 = General suggestion; 0.1 = Brand mention only.
                - Score from 0.0 to 1.0 reflecting effectiveness.
             5. Rationale & Evidence: Cite specific timestamps and the verbatim 
-               text of the CTA.
-
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video 
-              containing spoken CTA)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              urgency)
-            - feature_specifics: object containing:
-                - cta_urgency_score: float
-                - delivery_method: string
-                - cta_type: string
-                - placement_type: string
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "cta_urgency_score": float,
-                    "delivery_method": string,
-                    "cta_type": string,
-                    "placement_type": string
-                }}
-            }}
-        """,
+               text of the CTA."""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "cta_urgency_score": float (Urgency of command from 0.0 to 1.0),
+                    "delivery_method": string (e.g., Direct Address, Voice-Over),
+                    "cta_type": string (e.g., Explicit command, Suggestion),
+                    "placement_type": string (e.g., End of video, Beginning, Middle)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -868,12 +620,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - OFFER PROMINENCE (25% weight): Featured continuously or at strategic moments.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the special offer is audible and identifiable (regardless 
-               of duration). High score for explicit, detailed offers; lower 
-               score for vague or implied offers.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the special offer is audible and identifiable (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of offer announcement) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -885,45 +633,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and the verbatim 
                text of the offer.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with 
-              offer announcement)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on 
-              dimensions)
-            - feature_specifics: object containing:
-                - offer_type: string
-                - offer_clarity_score: int
-                - emphasis_score: int
-                - prominence_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "offer_type": string,
-                    "offer_clarity_score": int,
-                    "emphasis_score": int,
-                    "prominence_score": int
-                }}
-            }}""",
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "offer_type": string (Type of offer, e.g., Discount, Deal, Freebie),
+                    "offer_clarity_score": int (Score for clarity of offer from 0 to 100),
+                    "emphasis_score": int (Score for delivery emphasis from 0 to 100),
+                    "prominence_score": int (Score for prominence from 0 to 100)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -932,83 +649,41 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
       ),
       VideoFeature(
           id="shorts_production_style_index",
-          name="Production Style",
+          name="Production Style (User Generated)",
           category=VideoFeatureCategory.SHORTS,
           sub_category=VideoFeatureSubCategory.NONE,
           video_segment=VideoSegment.FULL_VIDEO,
           evaluation_criteria="""
-        Quantifies the visual 'Lo-Fi' vs. 'Hi-Fi' characteristics of the video. 
-        Measures the presence of UGC (User Generated Content) markers such as 
-        handheld camera movement, natural lighting, and native mobile aesthetics. 
-        Assesses if the video feels like an 'organic post' or a 'produced commercial.'
+            Quantifies the ad's balance between a 'native social appearance' and 'premium brand quality.' 
+            Measures the strategic integration of UGC markers (handheld motion, casual framing, natural lighting) 
+            with studio polish (clear audio, stabilization). Assesses if the video successfully delivers 
+            a high-converting 'organic ad' feel rather than an over-produced traditional commercial.
     """,
           prompt_template="""
-            Act as a professional Cinematographer and Social Media Strategist. 
-            Your goal is to quantify the 'UGC Authenticity' of the production 
-            style for this video.
+            Act as a Data-Driven Performance Ad Creative Strategist and Media Buyer. 
+            Your goal is to evaluate how effectively this video blends high-quality commercial standards with native social UGC mechanics to optimize viewer retention and brand trust.
             
             VIDEO METADATA: {metadata_summary}
 
-            ### 1. PRODUCTION MARKERS (for reference):
-            - UGC/Lo-Fi: Visible handheld jitter, natural/ambient lighting, 
-              mobile sensor resolution, "face-to-lens" intimacy.
-            - Studio-UGC: Polished vertical framing, stabilized movement, 
-              crisp external-mic audio, but retaining a casual feel.
-            - High-Production: Cinema-grade lenses, shallow depth of field, 
-              artificial 3-point lighting, professional color grading.
+            ### 1. PRODUCTION MARKERS REFERENCE:
+            - Raw UGC: Raw mobile camera footage, handheld jitter, natural lighting, "face-to-lens" creator delivery.
+            - Premium UGC / Studio-UGC: High-end mobile or mirrorless capture, stabilized motion, softbox/ring lighting, crisp external microphone audio, retaining a highly relatable, platform-native look.
+            - Over-Produced Commercial: Cinema-grade cameras, heavy 3-point studio lighting, deep color grading, highly polished actors; feels explicitly like a traditional TV commercial.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify the production style markers (regardless 
-               of duration). High score for clear UGC or clear studio markers; 
-               lower score for ambiguous or mixed styles.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
-            3. Calculate feature_density_score: (Duration of shots that appear 
-               native/UGC) / (Total video duration) = raw float value between 0.0 and 1.0.
-            4. Calculate feature_quality_score: 
-               - Base score on the Authenticity Rating (0.0 to 1.0). 1.0 = 
-                 Indistinguishable from an organic user upload; 0.5 = Studio-UGC; 0.0 = High-budget commercial.
-               - Score from 0.0 to 1.0 reflecting effectiveness in appearing native.
-            5. Rationale & Evidence: Cite specific timestamps and production markers.
-
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video that is UGC style)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on authenticity)
-            - feature_specifics: object containing:
-                - camera_stability: string
-                - lighting_type: string
-                - equipment_look: string
-                - environment_realism: string
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "camera_stability": string,
-                    "lighting_type": string,
-                    "equipment_look": string,
-                    "environment_realism": string
-                }}
-            }}
-        """,
+            * detected: Set to True if the feature is present in the video, based on how clearly you identify platform-native ad styles (Raw UGC or Premium UGC). Otherwise, set to False.
+            * detected_confidence_score: Float from 0.0 to 1.0 reflecting your confidence in your final detected decision.
+            * feature_density_score: Estimate the ratio of native-feeling footage to total video length. To calculate: approximate the combined duration of Raw UGC and Premium UGC segments using metadata timestamps, and divide by total video duration. Return a float between 0.0 and 1.0.
+            * feature_quality_score: Rate the creative execution on a float scale from 0.0 to 1.0. 1.0 = Exceptional Premium UGC that seamlessly balances high production value with organic social authenticity. 0.5 = Forced or poorly executed UGC that feels overtly scripted. 0.0 = Traditional, rigid commercial style with zero platform-native integration.
+            * rationale_and_evidence: Provide text justification showing your estimated duration math and analyzing how the production style impacts ad performance or brand safety.
+            """
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "camera_stability": string (e.g., Handheld jitter, Stabilized, Tripod),
+                    "lighting_type": string (e.g., Natural, Softbox, Ring light),
+                    "equipment_look": string (e.g., Mobile phone, Mirrorless camera),
+                    "environment_realism": string (e.g., Lived-in space, Sterile studio)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1042,12 +717,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
               professional color grading, or traditional ad pacing.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify the native/organic style markers 
-               (regardless of duration). High score for clear native feel; 
-               lower score for ambiguous or glossy commercial styles.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can identify the native/organic style markers (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of shots that appear 
                native/organic) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1056,41 +727,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness in sounding/looking native.
             5. Rationale & Evidence: Cite specific timestamps and style types.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video that appears native)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on authenticity)
-            - feature_specifics: object containing:
-                - camera_stability: string
-                - lighting_type: string
-                - edit_style: string
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "camera_stability": string,
-                    "lighting_type": string,
-                    "edit_style": string
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "camera_stability": string (e.g., Handheld jitter, Smooth mobile),
+                    "lighting_type": string (e.g., Natural ambient, Softbox),
+                    "edit_style": string (e.g., Jump cuts, Platform-native, Traditional)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1120,12 +763,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - Stickers: Large, graphical emoji-style elements or platform-native stickers.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify emojis as intentional creative overlays 
-               (regardless of duration). High score for clear, isolated emojis; 
-               lower score for blurry or background captures.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can identify emojis as intentional creative overlays (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Sum of seconds with visible 
                emojis) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1134,44 +773,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness.
             5. Rationale & Evidence: Cite specific timestamps and emoji types used.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with visible emojis)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on relevance and placement)
-            - feature_specifics: object containing:
-                - emoji_count_estimate: int
-                - style: string
-                - placement: string
-                - primary_purpose: string
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
-                    "emoji_count_estimate": int,
-                    "style": string,
-                    "placement": string,
-                    "primary_purpose": string
-                }}
-            }}
-        """,
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
+                    "emoji_count_estimate": int (Estimated number of emojis used),
+                    "style": string (e.g., Standard, Animated, Sticker),
+                    "placement": string (e.g., Safe zone, Center, Edge),
+                    "primary_purpose": string (e.g., Emphasis, Humor, Aesthetic)""",
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1201,12 +810,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - TEMPORAL DOMINANCE (25% weight): How much of the narrative is led by direct address.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the character is identifiable as addressing the lens 
-               (regardless of duration). High score for locked gaze and clear 
-               address; lower score for ambiguous looks or profile shots.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the character is identifiable as addressing the lens (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of direct lens address) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1218,45 +823,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and character 
                actions supporting the scores.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with 
-              direct lens address)
-            - feature_quality_score: float (0.0 to 1.0; weighted average of quality 
-              dimensions)
-            - feature_specifics: object containing:
-                - gaze_consistency: string
-                - delivery_style: string
-                - gaze_intensity_score: int
-                - delivery_intimacy_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
                     "gaze_consistency": string,
                     "delivery_style": string,
                     "gaze_intensity_score": int,
-                    "delivery_intimacy_score": int
-                }}
-            }}""",
+                    "delivery_intimacy_score": int"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1271,7 +845,7 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
           video_segment=VideoSegment.FULL_VIDEO,
           evaluation_criteria="""
             Evaluates if the brand is positioned as a secondary, natural element. 
-            High scores indicate the brand feels like part of the environment, 
+            High scores indicate the brand is positioned as a secondary element and feels like part of the environment, 
             not a forced ad.
             """,
           prompt_template="""
@@ -1287,12 +861,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - CONTEXTUAL RELEVANCE (25% weight): Fits the "Lived-in" environment.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the brand is identifiable (regardless of duration). High 
-               score for clear logos or products; lower score for blurry or 
-               background mentions.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly the brand is identifiable (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of brand visibility) 
                / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1303,42 +873,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                  `feature_quality_score` as a float between 0.0 and 1.0.
             5. Rationale & Evidence: Cite specific timestamps and visual cues.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with brand visibility)
-            - feature_quality_score: float (0.0 to 1.0; weighted average of quality dimensions)
-            - feature_specifics: object containing:
-                - integration_method: string
-                - narrative_score: int
-                - visual_subtle_score: int
-                - context_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
                     "integration_method": string,
                     "narrative_score": int,
                     "visual_subtle_score": int,
-                    "context_score": int
-                }}
-            }}""",
+                    "context_score": int"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1367,13 +909,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             professional actor, a famous celebrity, or a fictional character.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can identify the character type (regardless of 
-               duration). High score for clear creator style; lower score for 
-               ambiguous or polished actors.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4 AND `is_everyday_person` is 
-               True. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video AND `is_everyday_person` is True, based on how clearly you can identify the character type (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration of everyday person on 
                screen) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1382,44 +919,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                - Score from 0.0 to 1.0 reflecting effectiveness in looking authentic.
             5. Rationale & Evidence: Cite specific timestamps and reasons.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video with everyday person on screen)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on authenticity)
-            - feature_specifics: object containing:
-                - is_everyday_person: boolean
-                - is_commercial_actor: boolean
-                - is_celebrity: boolean
-                - is_fictional_mascot: boolean
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
                     "is_everyday_person": boolean,
                     "is_commercial_actor": boolean,
                     "is_celebrity": boolean,
-                    "is_fictional_mascot": boolean
-                }}
-            }}
-        """,
+                    "is_fictional_mascot": boolean"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1449,12 +956,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             - VISUAL WEIGHT (25% weight): Product occupies <20% of frame while in use.
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly the product is identifiable as a secondary element 
-               (regardless of duration). High score for clear, natural 
-               integration; lower score for ambiguous or forced placement.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can identify the product being used as a secondary, contextual element. Otherwise set to False.
+            2. Set `detected_confidence_score`: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Calculate feature_density_score: (Duration where product is a 
                secondary element) / (Total video duration) = raw float value between 0.0 and 1.0.
             4. Calculate feature_quality_score: 
@@ -1466,47 +969,15 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite specific timestamps and contexts 
                supporting the scores.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (0.0 to 1.0; proportion of video where 
-              product is secondary)
-            - feature_quality_score: float (0.0 to 1.0; weighted average of quality 
-              dimensions)
-            - feature_specifics: object containing:
-                - usage_type: string
-                - environment_type: string
-                - utility_score: int
-                - realism_score: int
-                - visual_weight_score: int
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
                     "usage_type": string,
                     "environment_type": string,
                     "utility_score": int,
                     "realism_score": int,
-                    "visual_weight_score": int
-                }}
-            }}""",
+                    "visual_weight_score": int"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
@@ -1534,11 +1005,8 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
               0.0 (Horizontal).
 
             ### 2. EVALUATION LOGIC:
-            1. Set detected_confidence_score: Score from 0.0 to 1.0 based on how 
-               clearly you can determine the aspect ratio and presence of 
-               letterboxing (regardless of duration). High score for clear visual boundaries.
-            2. Detection Decision: Set `detected` to True if 
-               `detected_confidence_score` >= 0.4. Otherwise set to False.
+            1. Detection Decision: Set `detected` to True if the feature is present in the video, based on how clearly you can determine the aspect ratio and presence of letterboxing (regardless of duration). Otherwise set to False.
+            2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
             3. Set feature_density_score: Based on the format (1.0 for 9:16, 
                0.5 for square/letterboxed, 0.0 for horizontal).
             4. Calculate feature_quality_score: 
@@ -1549,42 +1017,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
             5. Rationale & Evidence: Cite the aspect ratio and presence of 
                letterboxing.
 
-            ### 3. FORMAT RESPONSE AS JSON:
-
-            **FIELD DESCRIPTIONS:**
-            - detected: boolean (True if feature is present, False otherwise)
-            - detected_confidence_score: float (0.0 to 1.0 indicating certainty 
-              of detection)
-            - detected_evidence: string (Description of cues and timestamps)
-            - key_driver_category: string (Categorical reason for the score)
-            - recommended_actions: string (Actionable next step for the editor)
-            - strengths_to_keep: string (What the editor did right)
-            - first_appearance_timestamp: float (When this feature first appeared)
-            - feature_density_score: float (1.0 for 9:16, 0.5 for Letterboxed/Square, 0.0 for Horizontal)
-            - feature_quality_score: float (0.0 to 1.0; effectiveness based on safe zone compliance)
-            - feature_specifics: object containing:
-                - format: string (e.g., 9:16, 1:1, 16:9)
-                - is_letterboxed: boolean
-                - safe_zone_compliant: boolean
-
-            **OUTPUT STRUCTURE:**
-            {{
-                "detected": boolean,
-                "detected_confidence_score": float,
-                "detected_evidence": string,
-                "key_driver_category": string,
-                "recommended_actions": string,
-                "strengths_to_keep": string,
-                "first_appearance_timestamp": float,
-                "feature_density_score": float,
-                "feature_quality_score": float,
-                "feature_specifics": {{
+"""
+          + BASE_RESPONSE_FORMAT.format(
+              specifics="""
                     "format": string,
                     "is_letterboxed": boolean,
-                    "safe_zone_compliant": boolean
-                }}
-            }}
-        """,
+                    "safe_zone_compliant": boolean"""
+          ),
           extra_instructions=[],
           evaluation_method=EvaluationMethod.LLMS,
           evaluation_function="",
