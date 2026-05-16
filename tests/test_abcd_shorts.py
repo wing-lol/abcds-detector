@@ -34,7 +34,7 @@ def run_evaluation():
         bucket_name="solomon_abcd_ds",
         knowledge_graph_api_key=api_key,
         bigquery_dataset="abcd_detector_ds",
-        bigquery_table="abcd_assessments_shopify_v8",
+        bigquery_table="abcd_assessments_shopify_v9",
         assessment_file="",
         extract_brand_metadata=False,
         use_annotations=False,
