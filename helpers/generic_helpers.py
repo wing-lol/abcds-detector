@@ -300,10 +300,6 @@ def get_shorts_table_columns_schema() -> list[dict]:
           "data_type": bigquery.enums.SqlTypeNames.STRING,
       },
       {
-          "column": "key_driver_category",
-          "data_type": bigquery.enums.SqlTypeNames.STRING,
-      },
-      {
           "column": "recommended_actions",
           "data_type": bigquery.enums.SqlTypeNames.STRING,
       },
@@ -589,7 +585,6 @@ def build_features_for_bq(
           "detected": eval_feature.detected,
           "confidence_score": eval_feature.confidence_score,
           "detected_evidence": eval_feature.detected_evidence,
-          "key_driver_category": eval_feature.key_driver_category,
           "recommended_actions": eval_feature.recommended_actions,
           "strengths_to_keep": eval_feature.strengths_to_keep,
           "first_appearance_timestamp": eval_feature.first_appearance_timestamp,

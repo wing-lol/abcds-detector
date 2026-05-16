@@ -81,7 +81,6 @@ class ShortsFeatureEvaluation(FeatureEvaluation):
   """Class that represents the evaluation of a Shorts feature with new scores."""
 
   detected_evidence: str | None = None
-  key_driver_category: str | None = None
   recommended_actions: str | None = None
   strengths_to_keep: str | None = None
   first_appearance_timestamp: float | None = None
@@ -233,9 +232,6 @@ SHORTS_RESPONSE_SCHEMA = {
             "detected_evidence": {
                 "type": "string",
             },
-            "key_driver_category": {
-                "type": "string",
-            },
             "recommended_actions": {
                 "type": "string",
             },
@@ -315,7 +311,6 @@ SHORTS_RESPONSE_SCHEMA = {
             "detected",
             "confidence_score",
             "detected_evidence",
-            "key_driver_category",
             "recommended_actions",
             "strengths_to_keep",
             "first_appearance_timestamp",

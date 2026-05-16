@@ -148,7 +148,6 @@ class VideoEvaluationService:
                     strengths=evaluated_feature.get("strengths_to_keep") or "",
                     weaknesses=evaluated_feature.get("recommended_actions") or "",
                     detected_evidence=evaluated_feature.get("detected_evidence"),
-                    key_driver_category=evaluated_feature.get("key_driver_category"),
                     recommended_actions=evaluated_feature.get("recommended_actions"),
                     strengths_to_keep=evaluated_feature.get("strengths_to_keep"),
                     first_appearance_timestamp=evaluated_feature.get("first_appearance_timestamp"),
