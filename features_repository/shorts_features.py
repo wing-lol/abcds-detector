@@ -103,12 +103,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Wide/Long Shot (LS): Subject fills <30% of frame.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the subject fills the frame and 
-                    how unambiguous the shot type is. Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the subject fills the frame
+                       - how unambiguous the shot type is. Otherwise set to False.
                     2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Total CU+ECU duration) /
-                    (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total CU+ECU duration) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on the "Goldilocks Zone" of density (ideal is 30%-60%).
                         - Give a bonus if the first 3 seconds (The Hook) contain tight framing.
@@ -154,12 +155,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                       High score = studio quality/clear; Low score = muffled, heavy background noise.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the voice is audible and 
-                    identifiable. Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the voice is audible
+                       - how identifiable it is. Otherwise set to False.
                     2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Total duration of audible human speech) / 
-                       (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration of audible human speech) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Vocal Clarity (0.0 to 1.0).
                         - Give a bonus (+0.1) if the speech starts in the first 3 seconds (The Hook).
@@ -205,12 +207,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Off-Camera: Subject is looking at a secondary point, not the viewer.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the subject's pupils are directed 
-                    at the camera lens. Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the subject's pupils are directed at the camera lens. Otherwise set to False.
                     2. Set confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Total duration of direct eye 
-                       contact / address) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration of direct eye contact / address) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Eye Contact Intensity (0.0 to 1.0).
                         - Give a bonus (+0.1) if direct address starts in the first 2 seconds (Hook).
@@ -254,12 +256,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Headlines: Large top/bottom text bars that stay throughout the video.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the text is legible and 
-                    identifiable as a creative overlay (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the text is legible
+                       - how identifiable it is as a creative overlay (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Total duration where text overlays are visible) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration where text overlays are visible) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Formula: (readability_score + synchronicity_score) / 2
                         - Bonus_score: Add +0.1 if the text is in the "Mobile Safe Zone".
@@ -300,13 +303,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Product Close-Up (CU): Product occupies 30% to 59% of the frame area.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the product is identifiable 
-                    and in focus (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the product is identifiable
+                       - how in focus it is (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
-                    3. Calculate feature_density_score: (Total duration of Product CU 
-                       shots) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration of Product CU shots) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Product Identifiability (0.0 to 1.0) and Framing 
                           Style (is it centered or following rule of thirds?).
@@ -346,12 +349,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Product Extreme Close-Up (ECU): Product occupies 60% or more of the frame area.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the products fine details and 
-                    textures are visible and in focus (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the product's fine details and textures are visible
+                       - how in focus it is (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
-                    3. Calculate feature_density_score: (Total duration of Product ECU shots) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration of Product ECU shots) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Texture Visibility and Lighting Quality (0.0 to 1.0).
                         - Score from 0.0 to 1.0 reflecting effectiveness in showcasing high detail.
@@ -394,13 +398,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - UTILITY DEMONSTRATION (30% weight): Shows product's purpose/benefit.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly identifiable the product and its 
-                    usage are (regardless of duration or quality score). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly identifiable the product is
+                       - how clearly identifiable its usage are (regardless of duration or quality score). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
-                    3. Calculate feature_density_score: (Duration of active product usage) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of active product usage) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Interaction Depth * 0.40) + 
@@ -444,13 +448,14 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                       0.5 = Standard commercial; 0.0 = Corporate/Medical.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can identify slang, filler 
-                    words, or conversational structures (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you can identify slang
+                       - how clearly you can identify filler words
+                       - how clearly you can identify conversational structures (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision. 
-                    3. Calculate feature_density_score: (Duration of conversational/casual 
-                       speech) / (Total speech duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of conversational/casual speech) / (Total speech duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on the Informality Rating (0.0 to 1.0). Higher score 
                           for more casual/authentic tone.
@@ -489,13 +494,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Humor Type: "Observational", "Slapstick", "Deadpan", "Satirical".
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can identify attempts at humor 
-                    or comedic timing (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you can identify attempts at humor
+                       - how clearly you can identify comedic timing (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of comedic setups/payoffs) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of comedic setups/payoffs) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Edge Factor (how daring or unique the humor is) 
                           and Comedic Timing (0.0 to 1.0).
@@ -536,13 +541,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - AUDIENCE RELATABILITY (30% weight): Relatable to target audience.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the character is identifiable 
-                    as a protagonist (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the character is identifiable as a protagonist (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of character prominence) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of character prominence) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Character Prominence * 0.40) + 
@@ -589,13 +593,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Off-Camera: Secondary character or background voice mentions the action.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the spoken CTA is audible and 
-                    identifiable (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the spoken CTA is audible
+                       - how identifiable it is (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Total duration of the spoken 
-                       CTA) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Total duration of the spoken CTA) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on CTA Urgency (0.0 to 1.0). 1.0 = Explicit command 
                           with time-sensitivity; 0.5 = General suggestion; 0.1 = Brand mention only.
@@ -638,13 +642,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - OFFER PROMINENCE (25% weight): Featured continuously or at strategic moments.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the special offer is audible 
-                    and identifiable (regardless of duration). 
-                    Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the special offer is audible
+                       - how identifiable it is (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of offer announcement) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of offer announcement) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Offer Clarity * 0.40) + 
@@ -699,25 +703,19 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                       feels explicitly like a traditional TV commercial.
 
                 ### 2. EVALUATION LOGIC:
-                    * detected: Set to True if the feature is present in the video, 
-                      based on how clearly you identify platform-native ad styles 
-                      (Raw UGC or Premium UGC). Otherwise, set to False.
-                    * detected_confidence_score: Float from 0.0 to 1.0 reflecting your 
-                      confidence in your final detected decision.
-                    * feature_density_score: Estimate the ratio of native-feeling 
-                      footage to total video length. To calculate: approximate the 
-                      combined duration of Raw UGC and Premium UGC segments using 
-                      metadata timestamps, and divide by total video duration. Return 
-                      a float between 0.0 and 1.0.
-                    * feature_quality_score: Rate the creative execution on a float 
-                      scale from 0.0 to 1.0. 1.0 = Exceptional Premium UGC that 
-                      seamlessly balances high production value with organic social 
-                      authenticity. 0.5 = Forced or poorly executed UGC that feels 
-                      overtly scripted. 0.0 = Traditional, rigid commercial style 
-                      with zero platform-native integration.
-                    * rationale_and_evidence: Provide text justification showing your 
-                      estimated duration math and analyzing how the production style 
-                      impacts ad performance or brand safety.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you identify platform-native ad styles (Raw UGC or Premium UGC). Otherwise set to False.
+                    2. Set confidence_score: Float from 0.0 to 1.0 reflecting your confidence in your final detected decision.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Estimated duration of native-feeling footage) / (Total video duration)
+                        - Estimate the ratio by approximating the combined duration of Raw UGC and Premium UGC segments using metadata timestamps.
+                        - Returns a float between 0.0 and 1.0.
+                    4. Calculate feature_quality_score: 
+                        - Rate the creative execution on a scale from 0.0 to 1.0.
+                        - 1.0 = Exceptional Premium UGC that seamlessly balances high production value with organic social authenticity.
+                        - 0.5 = Forced or poorly executed UGC that feels overtly scripted.
+                        - 0.0 = Traditional, rigid commercial style with zero platform-native integration.
+                    5. Rationale & Evidence: Provide text justification showing your estimated duration math and analyzing how the production style impacts ad performance or brand safety.
             """
                 + BASE_RESPONSE_FORMAT.format(
                     specifics="""
@@ -760,11 +758,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
 
                 ### 2. EVALUATION LOGIC:
                     1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can identify the native/organic 
-                    style markers (regardless of duration). Otherwise set to False.
+                    in the video, based on:
+                       - how clearly you can identify the native/organic style markers (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of shots that appear 
-                       native/organic) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of shots that appear native/organic) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on the Authenticity Rating (0.0 to 1.0). 1.0 = 
                           Indistinguishable from an organic user post; 0.5 = Studio-Hybrid; 0.0 = Traditional commercial.
@@ -806,12 +805,13 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - Stickers: Large, graphical emoji-style elements or platform-native stickers.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can identify emojis as 
-                    intentional creative overlays (regardless of duration). Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you can identify emojis as intentional creative overlays
+                       - whether they are clearly identifiable (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Sum of seconds with visible 
-                       emojis) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Sum of seconds with visible emojis) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Relevance (do they match the tone/content?) and 
                           Placement (avoiding dead zones).
@@ -854,12 +854,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - TEMPORAL DOMINANCE (25% weight): How much of the narrative is led by direct address.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the character is identifiable 
-                    as addressing the lens (regardless of duration). Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the character is identifiable as addressing the lens (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of direct lens address) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of direct lens address) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Gaze Continuity * 0.45) + 
@@ -906,12 +906,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - CONTEXTUAL RELEVANCE (25% weight): Fits the "Lived-in" environment.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly the brand is identifiable 
-                    (regardless of duration). Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly the brand is identifiable (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of brand visibility) 
-                       / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of brand visibility) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Narrative Integration * 0.40) + 
@@ -955,12 +955,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     professional actor, a famous celebrity, or a fictional character.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video AND `is_everyday_person` is True, based on how clearly 
-                    you can identify the character type (regardless of duration). Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video AND `is_everyday_person` is True, based on:
+                       - how clearly you can identify the character type (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration of everyday person on 
-                       screen) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration of everyday person on screen) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Base score on Authenticity Rating (0.0 to 1.0). 1.0 = 
                           Indistinguishable from an organic user; 0.0 = Obvious professional actor.
@@ -1003,12 +1003,12 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                     - VISUAL WEIGHT (25% weight): Product occupies <20% of frame while in use.
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can identify the product being 
-                    used as a secondary, contextual element. Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you can identify the product being used as a secondary, contextual element. Otherwise set to False.
                     2. Set `detected_confidence_score`: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
-                    3. Calculate feature_density_score: (Duration where product is a 
-                       secondary element) / (Total video duration) = raw float value between 0.0 and 1.0.
+                    3. Calculate feature_density_score: 
+                        - Formula: (Duration where product is a secondary element) / (Total video duration)
+                        - Returns a raw float value between 0.0 and 1.0.
                     4. Calculate feature_quality_score: 
                         - Score each of the three dimensions in Step 1 from 0 to 100.
                         - Calculate the weighted total: `(Practical Utility * 0.45) + 
@@ -1052,9 +1052,9 @@ def get_shorts_feature_configs() -> list[VideoFeature]:
                       0.0 (Horizontal).
 
                 ### 2. EVALUATION LOGIC:
-                    1. Detection Decision: Set `detected` to True if the feature is present 
-                    in the video, based on how clearly you can determine the aspect ratio 
-                    and presence of letterboxing (regardless of duration). Otherwise set to False.
+                    1. Detection Decision: Set `detected` to True if the feature is present in the video, based on:
+                       - how clearly you can determine the aspect ratio
+                       - how clearly you can determine the presence of letterboxing (regardless of duration). Otherwise set to False.
                     2. Set detected_confidence_score: Score from 0.0 to 1.0 reflecting your confidence in your final detected decision.
                     3. Set feature_density_score: Based on the format (1.0 for 9:16, 
                        0.5 for square/letterboxed, 0.0 for horizontal).
