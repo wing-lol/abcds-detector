@@ -6,7 +6,7 @@ import sys
 import os
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from configuration import Configuration
 from main import execute_abcd_assessment_for_videos
@@ -34,7 +34,7 @@ def run_evaluation():
         bucket_name="solomon_abcd_ds",
         knowledge_graph_api_key=api_key,
         bigquery_dataset="abcd_detector_ds",
-        bigquery_table="abcd_assessments_shopify_v9",
+        bigquery_table="abcd_assessments_shopify_v10",
         assessment_file="",
         extract_brand_metadata=False,
         use_annotations=False,
@@ -67,8 +67,8 @@ def run_evaluation():
     # Set video to evaluate
     config.set_videos([
         # "gs://solomon_abcd_ds/videos/p8cvwBx4FFk.mp4",
-        # "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4"
-        "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/iT_lVoBHRSY.mp4" # easy to build ad
+        "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/781w7OGQnzM.mp4"
+        # "gs://recommendations-ai-test-384721_video_analysis_uploads/Shopify/shorts/iT_lVoBHRSY.mp4" # easy to build ad
     ])
     
     # Run evaluation

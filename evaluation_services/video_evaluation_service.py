@@ -150,7 +150,7 @@ class VideoEvaluationService:
                     detected_evidence=evaluated_feature.get("detected_evidence"),
                     recommended_actions=evaluated_feature.get("recommended_actions"),
                     strengths_to_keep=evaluated_feature.get("strengths_to_keep"),
-                    first_appearance_timestamp=evaluated_feature.get("first_appearance_timestamp"),
+                    first_appearance_timestamp=evaluated_feature.get("first_appearance_timestamp") if evaluated_feature.get("detected") else None,
                     feature_density_score=evaluated_feature.get("feature_density_score"),
                     feature_quality_score=evaluated_feature.get("feature_quality_score"),
                     feature_specifics=evaluated_feature.get("feature_specifics"),
